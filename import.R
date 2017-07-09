@@ -1,7 +1,5 @@
 datapath <- '/Users/echellwig/Drive/OtherPeople/otter'
 library(reshape2)
-library(plyr)
-library(rethinking)
 
 options(stringsAsFactors = FALSE)
 
