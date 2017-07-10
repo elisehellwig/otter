@@ -3,6 +3,7 @@ library(reshape2)
 
 options(stringsAsFactors = FALSE)
 
+locs <- read.csv(file.path(datapath, 'otterlocs.csv'))
 ott <- read.csv(file.path(datapath, 'otterpopAll.csv'))
 pup <- read.csv(file.path(datapath, 'otterpopPups.csv'))
 
