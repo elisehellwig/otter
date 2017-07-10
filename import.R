@@ -27,6 +27,8 @@ ottm$year <- as.integer(sub("X", "", ottm$year))
 NApops <- which(is.na(ottm$pop))
 ottr <- ottm[-NApops,]
 
+ottr$year <- ottr$year-2012
+
 write.csv(ottr, file.path(datapath, 'otterclean.csv'), row.names = FALSE)
 
 
@@ -43,6 +45,8 @@ pupm$year <- as.integer(sub("X", "", pupm$year))
 
 NApops <- which(is.na(pupm$pups))
 pupr <- pupm[-NApops,]
+
+pupr$year <- pupr$year - 2012
 
 otterpupper <- merge(ottr, pupr)
 
