@@ -11,18 +11,20 @@ pup <- read.csv(file.path(datapath, 'otterpopPups.csv'))
 areaNames <- c('Abbots', "NTB", "Giacomini", 'Rodeo', "Muir",'Madera',
                'Tennessee', "Bolinas",'Drakes','Bass','Alpine','Peters',
                'LasGallinas','Estero')
-sector <- c('North','North','North','South','South','Bay','South','South',
-            'North', 'Coast', 'Lagunitas','Lagunitas', 'Bay','North') 
 
 #####################################################
 
 ott$Area <- areaNames
-ott$sector <- sector
-ottm <- melt(ott, id.vars = c('Area','sector'), variable.name = 'Year', value.name = 'Pop')
+names(ott)[1] <- 'location'
 
-ottm$Year <- as.integer(sub("X", "", ottm$Year))
+ott_all <- merge(ott, locs, by='location')
 
-NApops <- which(is.na(ottm$Pop))
+ottm <- melt(ott_all, id.vars = c('location','region','habitat'), 
+             variable.name = 'year', value.name = 'pop')
+
+ottm$year <- as.integer(sub("X", "", ottm$year))
+
+NApops <- which(is.na(ottm$pop))
 ottr <- ottm[-NApops,]
 
 write.csv(ottr, file.path(datapath, 'otterclean.csv'), row.names = FALSE)
@@ -30,15 +32,21 @@ write.csv(ottr, file.path(datapath, 'otterclean.csv'), row.names = FALSE)
 
 
 pup$Area <- areaNames
-pup$sector <- sector
-pupm <- melt(pup, id.vars = c('Area','sector'), variable.name = 'Year', value.name = 'Pop')
+names(pup)[1] <- 'location'
+pup_all <- merge(pup, locs, by='location')
 
-pupm$Year <- as.integer(sub("X", "", pupm$Year))
 
-NApops <- which(is.na(pupm$Pop))
+pupm <- melt(pup_all, id.vars = c('location','region','habitat'), 
+             variable.name = 'year', value.name = 'pups')
+
+pupm$year <- as.integer(sub("X", "", pupm$year))
+
+NApops <- which(is.na(pupm$pups))
 pupr <- pupm[-NApops,]
 
-write.csv(pupr, file.path(datapath, 'pupclean.csv'), row.names = FALSE)
+otterpupper <- merge(ottr, pupr)
+
+write.csv(otterpupper, file.path(datapath, 'pupclean.csv'), row.names = FALSE)
 
 
 
