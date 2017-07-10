@@ -7,6 +7,9 @@ otr <- read.csv(file.path(datapath, 'otterclean.csv'))
 
 #########################################################
 
+
+
+
 mod1 <- map(
     alist(pop ~ dpois(lambda),
           log(lambda) <- a + by*year,
@@ -18,4 +21,10 @@ mod1 <- map(
 
 
 
-mod2 <- map2stan()
+mod2 <- map2stan(alist(pop ~ dpois(lambda),
+                       log(lambda) <- a + a_loc[location] + by*year,
+                       a_loc[location] ~ dnorm(0, sigma_loc),
+                       a ~ dnorm(0, 100),
+                       by ~ dnorm(0, 1),
+                       sigma_loc ~ dcauchy(0, 1)
+    ), data=otr, warmup=2000 , iter=7000 , chains=4 , cores=3)
