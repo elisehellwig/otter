@@ -7,9 +7,6 @@ otr <- read.csv(file.path(datapath, 'otterclean.csv'))
 
 #########################################################
 
-
-
-
 mod1 <- map(
     alist(pop ~ dpois(lambda),
           log(lambda) <- a + by*year,
