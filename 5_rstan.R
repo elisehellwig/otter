@@ -9,13 +9,13 @@ otr <- read.csv(file.path(datapath, 'otterclean.csv'))
 ##########################################################
 
 #data for lm stan model
-lmList <- list(pop=otr$pop,
-               year=otr$year,
-               N=nrow(otr))
+fixedlist <- list(pop=otr$pop,
+                  year=otr$year,
+                  N=nrow(otr))
 
 
 #just a normal linear model
-otrlm <- '
+otrfixed <- '
 data{
     int<lower=1> N; //number of data points
     real<lower=0> pop[N]; //dependent variable, otter population
@@ -28,12 +28,13 @@ parameters{
 model {
     real mu;
     for (i in 1:N) {
-        mu <- beta[1] + beta[2] * year[i];
+        mu = beta[1] + beta[2] * year[i];
         pop[i] ~ normal(mu, sigma);
     }
 }
 '
 
+fixedpost <- stan(model_code=otrfixed, data=fixedlist, iter=2000, chains=4)
 
 #multi-level model
 otrlmm <- '
@@ -62,7 +63,7 @@ model {
     to_vector(z_p) ~ normal(0,1);
     //likelihood
     for (i in 1:N) {
-        mu <- beta[1] + p[1,loc[i]] + (beta[2] + i[2, loc[i]]) * year[i];
+        mu = beta[1] + p[1,loc[i]] + (beta[2] + i[2, loc[i]]) * year[i];
         pop[i] ~ normal(mu, sigma);
     }
 }
