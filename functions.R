@@ -19,4 +19,12 @@ locpost <- function(sfit, location) {
     return(data.frame(b0=beta0post, b1=beta1post))
 }
 
-
+declinerisk <- function(sfit, location, postfun) {
+    
+    postdf <- do.call(postfun, list(sfit, location)) 
+    
+    dprob <- mean(postdf$b1<0)
+    
+    return(dprob)
+    
+}
