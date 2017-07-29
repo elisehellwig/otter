@@ -21,6 +21,9 @@ model {
     }
 }
 '
+saveRDS(linear, file.path(datapath, 'models/linear.RDS'))
+
+
 
 linearsplit <- '
 data{
@@ -54,8 +57,40 @@ model {
 }
 '
 
-### varying FX on location
+
 otrlmm <- '
+data{
+    int<lower=1> N; //number of data points
+    int P; //number of locations
+    real<lower=0> pop[N]; //dependent variable, otter population
+    real year[N]; //predictor variable, year
+    int <lower=1, upper=P> loc[N]; //location id
+
+}
+parameters{
+    real beta;
+    real <lower=0> sigma;
+    vector[P] p; //location intercepts 
+    real <lower=0> sigma_p;
+}  
+model {
+    real mu;
+  //priors
+    p ~ normal(0, sigma_p) ; 
+  //likelihood
+    for (i in 1:N) {
+        mu = beta + p[loc[i]];
+        pop[i] ~ normal(mu, sigma);
+    }
+}
+'
+saveRDS(otrlmm, file.path(datapath, 'models/varying1location.RDS'))
+
+
+
+
+### varying FX for intercept and slope on location
+otrlmm2 <- '
 data{
     int<lower=1> N; //number of data points
     int P; //number of locations
@@ -87,6 +122,7 @@ model {
     }
 }
 '
+saveRDS(otrlmm, file.path(datapath, 'models/varying2location.RDS'))
 
 
 
