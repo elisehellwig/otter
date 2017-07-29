@@ -22,7 +22,37 @@ model {
 }
 '
 
-
+linearsplit <- '
+data{
+    int<lower=1> N; //number of data points
+    real<lower=0> pop[N]; //dependent variable, otter population
+    real year[N]; //predictor variable, year
+    //dummy variables for locations
+    int <lower=0, upper=1> Bass[N];
+    int <lower=0, upper=1> Bolinas[N] ;
+    int <lower=0, upper=1> Drakes[N] ;
+    int <lower=0, upper=1> Estero[N] ;
+    int <lower=0, upper=1> Giacomini[N] ;
+    int <lower=0, upper=1> LasGallinas[N] ;
+    int <lower=0, upper=1> Madera[N] ;
+    int <lower=0, upper=1> Muir[N] ;
+    int <lower=0, upper=1> NTB[N];
+    int <lower=0, upper=1> Peters[N] ;
+    int <lower=0, upper=1> Rodeo[N] ;
+    int <lower=0, upper=1> Tennessee[N] ;
+}
+parameters{
+    vector[14] beta;
+    real <lower=0> sigma;
+}  
+model {
+    real mu;
+    for (i in 1:N) {
+        mu = beta[1] + year[i]*(beta[2] + beta[3] + beta[4] + beta[5] + beta[6] + beta[7] + beta[8] + beta[9] + beta[10] + beta[11] + beta[12] + beta[13] + beta[14]);
+        pop[i] ~ normal(mu, sigma);
+    }
+}
+'
 
 ### varying FX on location
 otrlmm <- '
