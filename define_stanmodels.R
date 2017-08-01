@@ -6,7 +6,7 @@ datapath <- '/Users/echellwig/Drive/OtherPeople/otterData'
 linear <- '
 data{
     int<lower=1> N; //number of data points
-    real<lower=0> pop[N]; //dependent variable, otter population
+    real pop[N]; //dependent variable, otter population
     real year[N]; //predictor variable, year
 }
 parameters{
@@ -62,7 +62,7 @@ otrlmm <- '
 data{
     int<lower=1> N; //number of data points
     int P; //number of locations
-    real<lower=0> pop[N]; //dependent variable, otter population
+    real pop[N]; //dependent variable, otter population
     real year[N]; //predictor variable, year
     int <lower=1, upper=P> loc[N]; //location id
 
@@ -94,7 +94,7 @@ otrlmm2 <- '
 data{
     int<lower=1> N; //number of data points
     int P; //number of locations
-    real<lower=0> pop[N]; //dependent variable, otter population
+    real pop[N]; //dependent variable, otter population
     real year[N]; //predictor variable, year
     int <lower=1, upper=P> loc[N]; //location id
 
@@ -126,7 +126,7 @@ saveRDS(otrlmm, file.path(datapath, 'models/varying2location.RDS'))
 
 
 
-### varying FX on region vs. habitat?
+### pups
 
 
 
