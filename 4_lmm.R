@@ -4,6 +4,8 @@ library(rethinking)
 rstan_options(auto_write = TRUE)
 
 otr <- read.csv(file.path(datapath, 'otterclean.csv'))
+otr$cpop <- scale(otr$pop)
+attributes(otr$cpop) <- NULL
 
 #########################################################
 
@@ -48,7 +50,7 @@ mod4 <- map2stan(
           sigma ~ dunif(0, 100),
           sigma_loc ~ cauchy(0,1)
     ), data=otr, warmup=8000, iter=16000,  chains=4, cores = 3,
-    control = list(adapt_delta = 0.999, max_treedepth = 15))
+    control = list(adapt_delta = 0.8, max_treedepth = 10))
 
 post4 <- extract.samples(mod4)
 
@@ -61,18 +63,8 @@ mod5 <- map2stan(
           b ~ dnorm(0, 10),
           sigma ~ dunif(0, 100)
     ), data=otr, iter=8000, chains=4, cores = 3,
-    control = list(adapt_delta = 0.999))
+    control = list(adapt_delta = 0.8))
 
-
-mod5alt <- map2stan(
-    alist(pop ~ dnorm(mu, sigma),
-          mu <- a + by[location]*year,
-          by[location] ~ dnorm(b, sigma),
-          a ~ dnorm(4, 10),
-          b ~ dnorm(0, 10),
-          sigma ~ dunif(0, 100)
-    ), data=otr, iter=8000 , chains=4, cores = 3,
-    control = list(adapt_delta = 0.999))
 
 
 
