@@ -128,6 +128,69 @@ saveRDS(otrlmm, file.path(datapath, 'models/varying2location.RDS'))
 
 ### pups
 
+puprlmm <- '
+data{
+    int<lower=1> N; //number of data points
+    int P; //number of locations
+    real pups[N]; //dependent variable, otter population
+    real year[N]; //predictor variable, year
+    int <lower=1, upper=P> loc[N]; //location id
+
+}
+parameters{
+    real beta;
+    real <lower=0> sigma;
+    vector[P] p; //location intercepts 
+    real <lower=0> sigma_p;
+}  
+model {
+    real mu;
+    //priors
+    p ~ normal(0, sigma_p) ; 
+    //likelihood
+    for (i in 1:N) {
+        mu = beta + p[loc[i]];
+        pop[i] ~ normal(mu, sigma);
+    }
+}
+'
+saveRDS(puprlmm, file.path(datapath, 'models/puprvarying1location.RDS'))
+
+
+### varying FX for intercept and slope on location
+puprlmm2 <- '
+data{
+    int<lower=1> N; //number of data points
+    int P; //number of locations
+    real pupr[N]; //dependent variable, otter population
+    real year[N]; //predictor variable, year
+    int <lower=1, upper=P> loc[N]; //location id
+
+}
+parameters{
+    vector[2] beta;
+    real <lower=0> sigma;
+    vector<lower=0>[2] sigma_u;
+    cholesky_factor_corr[2] L_u;
+    matrix[2,P] z_u;
+}  
+transformed parameters {
+    matrix[2,P] u;
+    u = diag_pre_multiply(sigma_u, L_u) * z_u;  //loc random effects
+}
+model {
+    real mu;
+    //priors
+    L_u ~ lkj_corr_cholesky(2.0);
+    to_vector(z_u) ~ normal(0,1);
+    //likelihood
+    for (i in 1:N) {
+    mu = beta[1] + u[1,loc[i]] + (beta[2] + u[2, loc[i]]) * year[i];
+    pop[i] ~ normal(mu, sigma);
+    }
+}
+'
+saveRDS(puprlmm2, file.path(datapath, 'models/puprvarying2location.RDS'))
 
 
 
