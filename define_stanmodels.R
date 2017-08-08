@@ -125,8 +125,31 @@ model {
 saveRDS(otrlmm, file.path(datapath, 'models/varying2location.RDS'))
 
 
+#############################################################
+########################### pups ##############################
 
-### pups
+
+linearpup <- '
+data{
+    int<lower=1> N; //number of data points
+    real pups[N]; //dependent variable, otter population
+    real year[N]; //predictor variable, year
+}
+parameters{
+    vector[2] beta;
+    real <lower=0> sigma;
+}  
+model {
+    real mu;
+    for (i in 1:N) {
+        mu = beta[1] + beta[2] * year[i];
+        pop[i] ~ normal(mu, sigma);
+    }
+}
+'
+saveRDS(linearpup, file.path(datapath, 'models/puplinear.RDS'))
+
+
 
 puprlmm <- '
 data{
@@ -162,7 +185,7 @@ puprlmm2 <- '
 data{
     int<lower=1> N; //number of data points
     int P; //number of locations
-    real pupr[N]; //dependent variable, otter population
+    real pups[N]; //dependent variable, otter population
     real year[N]; //predictor variable, year
     int <lower=1, upper=P> loc[N]; //location id
 
