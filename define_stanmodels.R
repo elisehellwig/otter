@@ -143,7 +143,7 @@ model {
     real mu;
     for (i in 1:N) {
         mu = beta[1] + beta[2] * year[i];
-        pop[i] ~ normal(mu, sigma);
+        pups[i] ~ normal(mu, sigma);
     }
 }
 '
@@ -173,7 +173,7 @@ model {
     //likelihood
     for (i in 1:N) {
         mu = beta + p[loc[i]];
-        pop[i] ~ normal(mu, sigma);
+        pups[i] ~ normal(mu, sigma);
     }
 }
 '
@@ -209,7 +209,7 @@ model {
     //likelihood
     for (i in 1:N) {
     mu = beta[1] + u[1,loc[i]] + (beta[2] + u[2, loc[i]]) * year[i];
-    pop[i] ~ normal(mu, sigma);
+    pups[i] ~ normal(mu, sigma);
     }
 }
 '
