@@ -4,6 +4,7 @@ options(mc.cores = parallel::detectCores())
 library(rstan)
 
 otr <- read.csv(file.path(datapath, 'otterclean.csv'))
+pupr <- read.csv(file.path(datapath, 'pupclean.csv'))
 linear <- readRDS(file.path(datapath, 'models/linear.RDS'))
 vl1 <- readRDS(file.path(datapath, 'models/varying1location.RDS'))
 vl2 <- readRDS(file.path(datapath, 'models/varying2location.RDS'))
@@ -55,5 +56,4 @@ saveRDS(multilong, file.path(datapath, 'models/varying2locationpost.RDS'))
 
 ###########################################
 
-multi1pup <- 
 
