@@ -90,6 +90,8 @@ saveRDS(otrlmm, file.path(datapath, 'models/varying1location.RDS'))
 
 
 ### varying FX for intercept and slope on location
+##note: we sample from z_u but we use u
+
 otrlmm2 <- '
 data{
     int<lower=1> N; //number of data points
