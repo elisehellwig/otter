@@ -48,7 +48,7 @@ saveRDS(multi1, file.path(datapath, 'models/pupvarying1locationpost.RDS'))
 
 #running the model for estimating parameters etc.
 multi2 <- stan(model_code=pvl2, data=multilist, iter=20000, warmup=5000,
-                  chains=4, control=list(adapt_delta = 0.99))
+                  chains=1, control=list(adapt_delta = 0.99))
 saveRDS(multi2, file.path(datapath, 'models/pupvarying2locationpost.RDS'))
 
 
