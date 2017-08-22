@@ -10,8 +10,8 @@ vl2 <- readRDS(file.path(datapath, 'models/varying2location.RDS'))
 
 source('functions.R')
 
-otr$cpop <- scale(otr$pop) #4.62 center; 2.15 scale
-attributes(otr$cpop) <- NULL
+#otr$cpop <- scale(otr$pop) #4.62 center; 2.15 scale
+#attributes(otr$cpop) <- NULL
 ##########################################################
 
 locfac <- factor(otr$location)
@@ -48,9 +48,9 @@ saveRDS(multi1, file.path(datapath, 'models/varying1locationpost.RDS'))
 
 
 #running the model for estimating parameters etc.
-multi2long <- stan(model_code=vl, data=multilist, iter=20000, warmup=5000,
+multi2long <- stan(model_code=vl2, data=multilist, iter=25000, warmup=5000,
                   chains=1, control=list(adapt_delta = 0.99))
-saveRDS(multilong, file.path(datapath, 'models/varying2locationpost.RDS'))
+saveRDS(multi2long, file.path(datapath, 'models/varying2locationpost.RDS'))
 
 
 ###########################################################################
