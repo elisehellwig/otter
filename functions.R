@@ -28,3 +28,35 @@ declinerisk <- function(sfit, location, postfun) {
     return(dprob)
     
 }
+
+
+extractStanPars <- function(stanmodel, parameter, column, stat=NA, 
+                            columnnames=NA) {
+    require(rstan)
+    
+    samples <- as.data.frame(extract(stanmodel, pars=parameter))
+    searchpattern <- paste0(parameter, '.', column, '.')
+    cols <- grep(searchpattern, names(samples))
+    
+    selectedsamples <- samples[,cols]
+    
+    if (!is.na(columnnames[1])) {
+        names(selectedsamples) <- columnnames
+    }
+    
+    
+    if (is.na(stat)) {
+        parestimates <- selectedsamples
+    } else {
+        parestimates <- data.frame(location=columnnames,
+                                   estimate=apply(selectedsamples, 2, stat))
+    }
+   
+    
+    return(parestimates)
+}
+
+
+
+
+
