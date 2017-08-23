@@ -8,7 +8,7 @@ ott <- read.csv(file.path(datapath, 'otterpopAll.csv'))
 pup <- read.csv(file.path(datapath, 'otterpopPups.csv'))
 
 
-areaNames <- c('Abbots', "NTB", "Giacomini", 'Rodeo', "Muir",'Madera',
+areaNames <- c('Abbotts', "NTB", "Giacomini", 'Rodeo', "Muir",'Madera',
                'Tennessee', "Bolinas",'Drakes','Bass','Alpine','Peters',
                'LasGallinas','Estero')
 
