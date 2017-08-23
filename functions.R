@@ -1,15 +1,18 @@
-extractpar <- function(stanmodel, parameter, column, stat=NA, 
-                       columnnames=NA, location=NA, rows=c(1,2)) {
+extractpar <- function(stanmodel, parameter, location=NA, rows=c(1,2)) {
     
     require(rstan)
-    pd <- sfit@par_dims[[parameter]]
+    pd <- stanmodel@par_dims[[parameter]]
     
     if (length(pd)==0) {
         parvec <- parameter
     } else if (length(pd)==1) {
         
+        if (is.na(rows)) {
+            rows <- 1:pd
+        }
+        
         if (is.na(location)) {
-            parvec <- paste0(parameter, '[', 1:pd, ']') 
+            parvec <- paste0(parameter, '[', rows, ']') 
         } else {
             parvec <- paste0(parameter, '[', location, ']') 
         }
@@ -34,7 +37,7 @@ extractpar <- function(stanmodel, parameter, column, stat=NA,
     }
         
     
-    ps <- extract(stanmodel, par=parvec)
+    ps <- extract(stanmodel, par=parvec)[[1]]
     
     return(ps)
 }
@@ -51,54 +54,50 @@ extractStanPars <- function(stanmodel, parameter, column, stat=NA,
     return(parestimates)
 }
 
-postxy <- function(samples) {
-    
-}
 
-
-
-
-locpost <- function(sfit, location=NA, cholesky=FALSE, par_name='beta', 
-                    blockid=NA) {
+locpost <- function(sfit, location=NA, blockid=NA, response='samples') {
     #sfit is a fitted stan model
     #location is a number from 1-14
     
-    pd <- sfit@par_dims
+    sid <- sfit@par_dims[['beta']]
     
     if (is.na(blockid)) {
-        beta0samples <- extract(sfit, pars=c(fixedpars[1], varyingpars[1]))
-            
+        beta0pars <- 'beta'
     } else {
-        if (is.na(location)) {
-            poi <- c(par_name, blockid)
-    
-        } else {
-            
-            if (pd[[blockid]][1]==1) {
-                poi <- c('beta', paste0(blockid,'[', location, ']'))
-                
-            } else if (pd[[blockid]][1]==2) {
-                poi <- c('beta', paste0(blockid,'[', 1:2, ',' , location, ']'))
-            } else {
-                stop('There can only be 1 or 2 varying parameters at this time')
-            }
-            
-        }
-            
+        beta0pars <- c('beta', blockid)
     }
     
-    beta0samples <- extract(sfit, pars=c(fixedpars[1], varyingpars[1]))
-    beta1samples <- extract(sfit, pars=c(fixedpars[2], varyingpars[2]))
+    #print(beta0pars)
+    
+    beta0samples <- sapply(beta0pars, function(p) {
+      extractpar(sfit, p, location, 1)  
+    })
+    
+    #print(str(beta0samples))
+    
+    beta0 <- apply(beta0samples, 1, sum)
     
     
-    beta0post <-  beta0samples[[1]] + beta0samples[[2]]
-    attributes(beta0post) <- NULL
+    beta1samples <- sapply(beta0pars, function(p) {
+        extractpar(sfit, p, location, 2)  
+    })
+    
+    beta1 <- apply(beta1samples, 1, sum)
+    
+    if (response=='samples') {
+        return(data.frame(b0=beta0, b1=beta1))
+    } else if (response=='function'){
+        
+        postfun <- function(x, fun) {
+            ysamp <- beta0 + x*beta1
+            y <- do.call(fun, list(ysamp))
+            return(y)
+        }
+        
+        return(postfun)
+    }
     
     
-    beta1post <-  beta1samples[[1]] + beta1samples[[2]]
-    attributes(beta1post) <- NULL
-    
-    return(data.frame(b0=beta0post, b1=beta1post))
 }
 
 declinerisk <- function(sfit, location, postfun) {
