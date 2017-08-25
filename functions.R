@@ -38,6 +38,7 @@ extractpar <- function(stanmodel, parameter, location=NA, rows=c(1,2)) {
         
     
     ps <- extract(stanmodel, par=parvec)[[1]]
+    attributes(ps) <- NULL
     
     return(ps)
 }
@@ -59,30 +60,25 @@ locpost <- function(sfit, location=NA, blockid=NA, response='samples') {
     #sfit is a fitted stan model
     #location is a number from 1-14
     
-    sid <- sfit@par_dims[['beta']]
-    
     if (is.na(blockid)) {
-        beta0pars <- 'beta'
+        beta0samples <- extractpar(sfit, 'beta', rows=1)
+        beta1samples <- extractpar(sfit, 'beta', rows=2)
+        
+        
     } else {
-        beta0pars <- c('beta', blockid)
+
+        beta0samp <- data.frame(f=extractpar(sfit, 'beta', rows=1),
+                                v=extractpar(sfit, blockid, location, rows=1))
+        beta1samp <- data.frame(f=extractpar(sfit, 'beta', rows=2),
+                                v=extractpar(sfit, blockid, location, rows=2))
     }
     
     #print(beta0pars)
     
-    beta0samples <- sapply(beta0pars, function(p) {
-      extractpar(sfit, p, location, 1)  
-    })
-    
     #print(str(beta0samples))
     
-    beta0 <- apply(beta0samples, 1, sum)
-    
-    
-    beta1samples <- sapply(beta0pars, function(p) {
-        extractpar(sfit, p, location, 2)  
-    })
-    
-    beta1 <- apply(beta1samples, 1, sum)
+    beta0 <- apply(beta0samp, 1, sum)
+    beta1 <- apply(beta1samp, 1, sum)
     
     if (response=='samples') {
         return(data.frame(b0=beta0, b1=beta1))
