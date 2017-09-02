@@ -2,6 +2,7 @@ datapath <- '/Users/echellwig/Drive/OtherPeople/otterData'
 options(stringsAsFactors = FALSE)
 library(rstan)
 library(ggplot2)
+library(rethinking)
 otr <- read.csv(file.path(datapath, 'otterclean.csv'))
 vl1 <- readRDS(file.path(datapath, 'models/varying1locationpost.RDS'))
 vl2 <- readRDS(file.path(datapath, 'models/varying2locationpost.RDS'))
@@ -34,10 +35,40 @@ locpredict <- sapply(1:14, function(i) {
     locpost(vl2, i, 'u', response='function')
 })
 
+
+
+yrs <- 0:10
+df <- expand.grid(1:14, yrs)
+attributes(df)$out.attrs <- NULL
+df$pop <- predictpop(df, locpredict, median)
+allpredictions <- predictpop(df, locpredict, same)
+hpdints <- t(apply(allpredictions, 2, HPDI, prob=0.95))
+attributes(hpdints)$dimnames <- NULL
+
+dfci <- cbind(df, hpdints)
+
+dfci$location <- rep(locs, length(yrs))
+names(dfci) <- c('ID','YearID','P_Otters','Lower95','Upper95','Site')
+dfci$Year <- dfci$YearID + 2012
+dfm <- merge(dfci, otr2, all.x = TRUE)
+
+write.csv(dfm, file.path(datapath, 'vis/popplot.csv'), row.names = FALSE)
+
+
+predict10 <- sapply(locpredict, function(lfun) {
+    do.call(lfun, list(10, median))
+})
+
+extinctp10 <- sapply(locpredict, function(lfun) {
+    mean(do.call(lfun, list(10, same))<0)
+})
+
+
 pdat <- data.frame(loc=locs,
                    declineP=sapply(1:14, function(i) {
                        mean(b1samples[,i]<0)
                    }),
+                   extinct10=extinctp10,
                    year5=round(sapply(locpredict, function(lfun) {
                        do.call(lfun, list(5, median))
                    }),1),
@@ -45,27 +76,4 @@ pdat <- data.frame(loc=locs,
                        do.call(lfun, list(10, median))
                    }),1))
 
-yrs <- 0:10
-df <- expand.grid(1:14, yrs)
-df$pop <- sapply(1:nrow(df), function(n) {
-    i <- df[n,1]
-    j <- df[n,2]
-    round(locpredict[[i]](j, median),1)
-})
-df$location <- rep(locs, length(yrs))
-names(df) <- c('ID','YearID','P_Otters','Site')
-df$Year <- df$YearID + 2012
-attributes(df)$out.attrs <- NULL
-dfm <- merge(df, otr2, all.x = TRUE)
-
-
-popplot <- ggplot(data=dfm) + geom_line(aes(x=Year, y=P_Otters, color=Site))
-popplot <- popplot + geom_point(aes(x=Year, y=O_Otters, color=Site))
-popplot <- popplot + facet_wrap(~Site) + theme_classic()
-
-
-predict10 <- sapply(locpredict, function(lfun) {
-    do.call(lfun, list(10, median))
-})
-
-
+write.csv(pdat, file.path(datapath,'vis/likelihoods.csv'), row.names = FALSE)
