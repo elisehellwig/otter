@@ -106,4 +106,27 @@ declinerisk <- function(sfit, location, postfun) {
     
 }
 
+same <- function(x) {
+    return(x)
+}
+
+
+
+predictpop <- function(x, funlist, sumfun, locID=1, yearID=2, decimalpts=1) {
+    
+    newvar <- sapply(1:nrow(x), function(n) {
+        i <- df[n,locID]
+        j <- df[n,yearID]
+        round(funlist[[i]](j, sumfun), decimalpts)
+    })
+    
+    attributes(newvar)$out.attrs <- NULL
+    
+    
+    return(newvar)
+}
+
+
+
+
 
