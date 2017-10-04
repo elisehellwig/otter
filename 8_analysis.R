@@ -18,9 +18,17 @@ names(otr2) <- c('Site','YearID','O_Otters')
 
 ###########################################################################
 
-##slope analysis
+##param analysis
 
+b0fixed <- extractpar(vl2, 'beta', location=NA, rows=1)
 b1fixed <- extractpar(vl2, 'beta', location=NA, rows=2)
+
+b0samples <- data.frame(sapply(1:14, function(loc) {
+    extractpar(vl2, 'u', location=loc, rows=1) + b0fixed
+}))
+names(b0samples) <- locs
+
+
 
 b1samples <- data.frame(sapply(1:14, function(loc) {
     extractpar(vl2, 'u', location=loc, rows=2) + b1fixed
@@ -77,3 +85,12 @@ pdat <- data.frame(loc=locs,
                    }),1))
 
 write.csv(pdat, file.path(datapath,'vis/likelihoods.csv'), row.names = FALSE)
+
+
+paramdf <- data.frame(alpha=apply(b0samples, 2, mean),
+                      beta=apply(b1samples, 2, mean))
+responsedf <- cbind(pdat, paramdf)
+
+write.csv(responsedf, file.path(datapath,'responsevars.csv'), row.names = FALSE)
+
+
