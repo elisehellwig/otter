@@ -151,6 +151,28 @@ model {
 '
 saveRDS(linearpup, file.path(datapath, 'models/puplinear.RDS'))
 
+poispup <- 'data{
+    int<lower=1> N; //number of data points
+    real pups[N]; //dependent variable, otter population
+    real year[N]; //predictor variable, year
+}
+parameters{
+    vector[2] beta;
+    real mu;
+    real <lower=0> lambda;
+}  
+model {
+    for (i in 1:N) {
+        mu = beta[1] + beta[2] * year[i];
+        lambda = exp(mu);
+        pups[i] ~ poisson(lambda);
+    }
+}
+'
+
+saveRDS(poispup, file.path(datapath, 'models/puppoisson.RDS'))
+
+
 
 
 puprlmm <- '
