@@ -127,6 +127,40 @@ predictpop <- function(x, funlist, sumfun, locID=1, yearID=2, decimalpts=1) {
 }
 
 
+convertbinary <- function(vector) {
+    vals <- as.character(unique(vector))
+    df <- sapply(vals, function(v) ifelse(vector==v, 1, 0))
+    return(df)
+}
+
+createformula <- function(data, responsevar, predictorstart=NA, 
+                          predictorend=NA){
+    
+    if (is.na(predictorend)) {
+        if (is.na(predictorstart)) {
+            responseindex <- which(names(data)==reponsevar)
+            allindices <- 1:dim(data)[2]
+            varindices <- allindices[allindices!=responseindex]
+            
+        } else {
+            varindices <- predictorstart:dim(data)[2]
+        }
+        
+    } else {
+        varindices <- predictorstart:predictorend
+    }
+    
+    fmlachr <- paste(responsevar,'~', paste(names(data)[varindices], 
+                              collapse=' + '))
+    fmla <- as.formula(fmlachr)
+    
+    return(fmla)
+}
+
+
+
+
+
 
 
 
