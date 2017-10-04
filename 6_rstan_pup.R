@@ -2,9 +2,11 @@ datapath <- '/Users/echellwig/Drive/OtherPeople/otterData'
 options(stringsAsFactors = FALSE)
 options(mc.cores = parallel::detectCores())
 library(rstan)
+library(rethinking)
 
 pupr <- read.csv(file.path(datapath, 'pupclean.csv'))
 linear <- readRDS(file.path(datapath, 'models/puplinear.RDS'))
+pois <- readRDS(file.path(datapath, 'models/puppoisson.RDS'))
 pvl1 <- readRDS(file.path(datapath, 'models/puprvarying1location.RDS'))
 pvl2 <- readRDS(file.path(datapath, 'models/puprvarying2location.RDS'))
 
@@ -36,6 +38,30 @@ multilist <- list(pups=pupr$pups,
 fixedl <- stan(model_code=linear, data=fixedlist, iter=20000, warmup = 5000,
                chains=1)
 saveRDS(fixedl, file.path(datapath, 'models/pupfixedpost.RDS'))
+
+#fixed FX model poisson model
+fixedp <- stan(model_code=pois, data=fixedlist, iter=20000, warmup = 5000,
+               chains=1)
+
+
+fixedp <- map2stan(
+    alist(
+        pups ~ dpois(lambda),
+        log(lambda) <- beta1 + year*beta2,
+        beta1 ~ dnorm(0, 1),
+        beta2 ~ dnorm(0, 1)), 
+    data=pupr, iter=20000, warmup = 5000, chains=1, 
+    control = list(adapt_delta = 0.99))
+
+fixedl <- map2stan(
+    alist(
+        pups ~ dnorm(mu, sigma),
+        mu <- beta1 + year*beta2,
+        beta1 ~ dnorm(0, 1),
+        beta2 ~ dnorm(0, 1),
+        sigma ~ dunif(0,10)), 
+    data=pupr, iter=20000, warmup = 5000, chains=1, 
+    control = list(adapt_delta = 0.99))
 
 #Varying FX location model
 
