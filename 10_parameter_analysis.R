@@ -5,8 +5,8 @@ library(ggplot2)
 library(rethinking)
 library(randomForest)
 library(glmnet)
-
-
+library(car)
+source('functions.R')
 av <- read.csv(file.path(datapath, 'allvars.csv'))
 
 
@@ -19,41 +19,35 @@ firstp <- 10
 ### Random forest
 declinePformula <- createformula(av, 'declineP', firstp)
 declinerf <- randomForest(declinePformula, data=av)
+drf <- randomForest(declineP ~ region + Latitude, data=av)
 
 
 betaformula <- createformula(av, 'beta', firstp)
 betarf <- randomForest(betaformula, data=av)
+brf <- randomForest(beta ~ region + Latitude, data=av)
 
 
 alphaformula <- createformula(av, 'alpha', firstp)
 alpharf <- randomForest(alphaformula, data=av)
-
+arf <- randomForest(alpha ~ region + Latitude, data=av)
 
 metricformula <- createformula(av, 'metric', firstp)
 metricrf <- randomForest(metricformula, data=av)
+mrf <- randomForest(metric ~ region + Latitude, data=av)
+##############################################################
+
+
+
 
 
 
 ##############################################################
-#shrinkage methods
-shrinkcols <- c('declineP', 'beta','alpha', 'SFOdistance','SFOtime',
-                'PopDensity','logDensity','Longitude','Latitude')
-avs <- av[,shrinkcols]
-binaryregion <- convertbinary(av$region)
-binaryhabitat <- convertbinary(av$habitat)
-binaryaccess <- convertbinary((av$Access))
-avs <- cbind(avs, binaryregion, binaryhabitat, binaryaccess)
 
-
-declinelass <- glmnet(x=as.matrix(avs[,4:ncol(avs)]), y=avs$declineP, 
-                      family='gaussian', alpha=1)
-
-
-sanitycheck <- lm(beta ~ habitat, data=av)
-
-
+sanitycheck <- lm(beta ~ Latitude, data=av)
+sanity
 #forward/backward selection
 
 
 
-
+##############################################################
+## Anova
