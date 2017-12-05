@@ -5,7 +5,7 @@ library(ggplot2)
 library(rethinking)
 library(randomForest)
 library(glmnet)
-
+source('functions.R')
 
 av <- read.csv(file.path(datapath, 'allvars.csv'))
 
