@@ -49,8 +49,33 @@ declinelass <- glmnet(x=as.matrix(avs[,4:ncol(avs)]), y=avs$declineP,
                       family='gaussian', alpha=1)
 
 
+##############################################################
+#bayesian
+
+DPfixed <- map2stan(
+    alist(declineP ~ dnorm(mu, sigma),
+          mu <- a + bl*Latitude,
+          a ~ dnorm(7.6, 10),
+          bl ~ dnorm(0, 10),
+          sigma ~ dunif(0,20)
+    ), 
+    data=av, iter=4000, warmup=2000, chains=4, cores=3,
+    control = list(adapt_delta = 0.999, max_treedepth=15))
 
 
 
 
+
+
+
+
+DPreg <- map2stan(
+    alist(declineP ~ dnorm(mu, sigma),
+          mu <- a + by[regionid]*year,
+          by[regionid] ~ dnorm(b, sigma),
+          a ~ dnorm(4, 10),
+          b ~ dnorm(0, 10),
+          sigma ~ dunif(0,20)
+    ), data=av, iter=16000, warmup=8000, chains=4, control = list(adapt_delta = 0.999),
+    cores=3)
 
