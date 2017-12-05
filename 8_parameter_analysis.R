@@ -14,7 +14,7 @@ av <- read.csv(file.path(datapath, 'allvars.csv'))
 ####################################################################
 ####################################################################
 
-firstp <- 10
+firstp <- c('Latitude','region')
 
 ### Random forest
 declinePformula <- createformula(av, 'declineP', firstp)
@@ -49,10 +49,7 @@ declinelass <- glmnet(x=as.matrix(avs[,4:ncol(avs)]), y=avs$declineP,
                       family='gaussian', alpha=1)
 
 
-sanitycheck <- lm(beta ~ habitat, data=av)
 
-
-#forward/backward selection
 
 
 
