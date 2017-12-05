@@ -133,10 +133,13 @@ convertbinary <- function(vector) {
     return(df)
 }
 
-createformula <- function(data, responsevar, predictorstart=NA, 
-                          predictorend=NA){
+createformula <- function(data, responsevar, predictornames,
+                          predictorstart=NA, predictorend=NA){
     
-    if (is.na(predictorend)) {
+    if (!is.na(predictornames[1])) {
+        varnames <- predictornames
+        
+    } else if (is.na(predictorend)) {
         if (is.na(predictorstart)) {
             responseindex <- which(names(data)==reponsevar)
             allindices <- 1:dim(data)[2]
@@ -148,10 +151,10 @@ createformula <- function(data, responsevar, predictorstart=NA,
         
     } else {
         varindices <- predictorstart:predictorend
+        varnames <- names(data)[varindices]
     }
     
-    fmlachr <- paste(responsevar,'~', paste(names(data)[varindices], 
-                              collapse=' + '))
+    fmlachr <- paste(responsevar,'~', paste(varnames, collapse=' + '))
     fmla <- as.formula(fmlachr)
     
     return(fmla)
