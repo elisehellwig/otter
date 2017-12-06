@@ -173,11 +173,12 @@ model {
     to_vector(z_u) ~ normal(0,1);
     //likelihood
     for (i in 1:N) {
-        mu = beta[1] + u[1,loc[i]] + (beta[2] + u[2, loc[i]]) * year[i];
+        mu = beta[1] + u[1,loc[i]] + (beta[2] + u[2, loc[i]]) * Latitude[i];
         declineP[i] ~ normal(mu, sigma);
     }
 }
 '
+saveRDS(DPmixed, file.path(datapath, 'models/DPvaryinglocation.RDS'))
 
 
 
