@@ -133,7 +133,7 @@ convertbinary <- function(vector) {
     return(df)
 }
 
-createformula <- function(data, responsevar, predictornames,
+createformula <- function(data, responsevar, predictornames=NA,
                           predictorstart=NA, predictorend=NA){
     
     if (!is.na(predictornames[1])) {
@@ -161,6 +161,44 @@ createformula <- function(data, responsevar, predictornames,
 }
 
 
+extractrf <- function(x, response, predictors, element='R2') {
+    require(randomForest)
+    
+    if ('randomForest' %in% class(x)) {
+        rfmod <- x
+    } else if (is.data.frame(x)) {
+        if (is.numeric(predictors)) {
+            fmla <- createformula(x, response, predictorstart = predictors[1],
+                                  predictorend=predictors[2])
+        } else if (is.character(predictors)) {
+            fmla <- createformula(x, response, predictornames=predictors)
+        } else {
+            stop('Predictors must be either of the class numeric or character.')
+        }
+        
+
+        rfmod <- randomForest(fmla, x)
+    } else {
+        stop('x must either be a randomForest object or a data.frame')
+    }
+    
+    
+    
+    if (element=='R2') {
+        value <- mean(rfmod$rsq)
+    } else if (element=='rmse') {
+        value <- sqrt(mean(rfmod$mse))
+    } else if (element=='model') {
+        value <- rfmod
+    } else if (element=='importance_raw'){
+        value <- importance(rfmod)
+    } else if (element=='importance_normal') {
+        rawimp <- importance(rfmod)
+        value <- rawimp/max(rawimp)
+    }
+    
+    return(value)
+}
 
 
 
