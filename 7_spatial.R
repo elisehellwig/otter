@@ -46,6 +46,9 @@ xspdf$alpha <- round(xspdf$alpha, 2)
 xspdf$beta <- round(xspdf$beta, 3)
 xspdf$metric <- round(xspdf$metric, 2)
 
+xspdf$latscale <- scale(xspdf$Latitude)
+attributes(xspdf$latscale) <- NULL
+
 write.csv(xspdf, file.path(datapath, 'allvars.csv'), row.names = FALSE)
 
 
