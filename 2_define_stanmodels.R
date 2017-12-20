@@ -126,9 +126,9 @@ saveRDS(otrlmm, file.path(datapath, 'models/varying2location.RDS'))
 
 
 
-### parameter analysis
+### parameter analysis #########
 
-DPfixed <- linear <- '
+DPfixed <- '
 data{
     int<lower=1> N; //number of data points
     real declineP[N]; //dependent variable, likelihood of decline
@@ -146,41 +146,49 @@ model {
     }
 }
 '
+saveRDS(DPfixed, file.path(datapath, 'models/DPfixedFX.RDS'))
 
-DPmixed <- '
+
+
+BETAfixed <- '
 data{
     int<lower=1> N; //number of data points
-    int P; //number of locations
-    real declineP[N]; //dependent variable, likelihood of decline
+    real BETA[N]; //dependent variable, rate of change of pop
     real Latitude[N]; //predictor variable, latitude
-    int <lower=1, upper=P> loc[N]; //location id
 }
 parameters{
     vector[2] beta;
     real <lower=0> sigma;
-    vector<lower=0>[2] sigma_u;
-    cholesky_factor_corr[2] L_u;
-    matrix[2,P] z_u;
 }  
-transformed parameters {
-    matrix[2,P] u;
-    u = diag_pre_multiply(sigma_u, L_u) * z_u;  //loc random effects
-}
 model {
     real mu;
-    //priors
-    L_u ~ lkj_corr_cholesky(2.0);
-    to_vector(z_u) ~ normal(0,1);
-    //likelihood
     for (i in 1:N) {
-        mu = beta[1] + u[1,loc[i]] + (beta[2] + u[2, loc[i]]) * Latitude[i];
-        declineP[i] ~ normal(mu, sigma);
+        mu = beta[1] + beta[2] * Latitude[i];
+        BETA[i] ~ normal(mu, sigma);
     }
 }
 '
-saveRDS(DPmixed, file.path(datapath, 'models/DPvaryinglocation.RDS'))
+saveRDS(BETAfixed, file.path(datapath, 'models/BETAfixedFX.RDS'))
 
 
-
+alphafixed <- '
+data{
+    int<lower=1> N; //number of data points
+    real alpha[N]; //dependent variable, initial population
+    real Latitude[N]; //predictor variable, latitude
+}
+parameters{
+    vector[2] beta;
+    real <lower=0> sigma;
+}  
+model {
+    real mu;
+    for (i in 1:N) {
+        mu = beta[1] + beta[2] * Latitude[i];
+        alpha[i] ~ normal(mu, sigma);
+    }
+}
+'
+saveRDS(alphafixed, file.path(datapath, 'models/alphafixedFX.RDS'))
 
 
