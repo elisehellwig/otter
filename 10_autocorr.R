@@ -2,6 +2,7 @@ datapath <- '/Users/echellwig/Drive/OtherPeople/otterData'
 library(spdep)
 library(raster)
 library(rgdal)
+source('functions.R')
 
 
 rdf <- read.csv(file.path(datapath, 'Residuals.csv'))
@@ -28,33 +29,45 @@ saveRDS(distnb, file.path(datapath, 'DistanceOtters.RDS'))
 klist <- nb2listw(knb)
 distlist <- nb2listw(distnb)
 
-set.seed(2818893)
-### Alpha ######
-kalpha <- moran.mc(rsp$alpha, klist, 99999)
-distalpha <- moran.mc(rsp$alpha, distlist, 99999)
+p <- 99999
 
-kresAG <- moran.mc(rsp$alphares, klist, 99999, alternative='greater')
-kresAL <- moran.mc(rsp$alphares, klist, 99999, alternative='less')
-distresAG <- moran.mc(rsp$alphares, distlist, 99999, 
-                      alternative='greater')
-distresAL <- moran.mc(rsp$alphares, distlist, 99999, alternative='less')
+vars <- c('alpha','beta','declineP')
+
+set.seed(4678)
+pvalG <- data.frame(knn=sapply(vars, function(v) {
+                       autocor(rsp, v, klist, p, return='p-value')
+                            }),  
+                     knnRES=sapply(vars, function(v) {
+                       autocor(rsp, v, klist, p, res=TRUE, return='p-value')
+                            }),
+                     dist=sapply(vars, function(v) {
+                       autocor(rsp, v, distlist, p, return='p-value')
+                            }),
+                     distRES=sapply(vars, function(v) {
+                       autocor(rsp, v, distlist, p, res=TRUE, return='p-value')
+                           }))
+
+set.seed(4678)
+moranG <- data.frame(knn=sapply(vars, function(v) {
+                      autocor(rsp, v, klist, p, return='statistic')
+                       }),  
+                    knnRES=sapply(vars, function(v) {
+                       autocor(rsp, v, klist, p, res=TRUE, return='statistic')
+                        }),
+                    dist=sapply(vars, function(v) {
+                       autocor(rsp, v, distlist, p, return='statistic')
+                        }),
+                    distRES=sapply(vars, function(v) {
+                       autocor(rsp, v, distlist, p, res=TRUE, 
+                               return='statistic')
+                        }))
 
 
-### Beta ######
 
-kbeta <- moran.mc(rsp$beta, klist, 99999)
-distbeta <- moran.mc(rsp$beta, distlist, 99999)
 
-kresBG <- moran.mc(rsp$betares, klist, 99999, alternative='greater')
-kresBL <- moran.mc(rsp$betares, klist, 99999, alternative='less')
-distresBG <- moran.mc(rsp$betares, distlist, 99999, 
-                      alternative='greater')
-distresBL <- moran.mc(rsp$betares, distlist, 99999, alternative='less')
 
-### DeclineP ######
+pval <- data.frame(knn=sapply(moranG$knn, function(mi) mi$p.value),
+                   knnRES=sapply(moranG$knnRES, function(mi) mi$p.value),
+                   dist=sapply(moranG$dist, function(mi) mi$p.value),
+                   distRES=sapply(moranG$distRES, function(mi) mi$p.value))
 
-kDP <- moran.mc(rsp$declineP, klist, 99999)
-distDP <- moran.mc(rsp$declineP, distlist, 99999)
-
-kresDP <- moran.mc(rsp$declinePres, klist, 99999)
-distresDP <- moran.mc(rsp$declinePres, distlist, 99999)
