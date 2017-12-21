@@ -7,7 +7,7 @@ extractpar <- function(stanmodel, parameter, location=NA, rows=c(1,2)) {
         parvec <- parameter
     } else if (length(pd)==1) {
         
-        if (is.na(rows)) {
+        if (is.na(rows[1])) {
             rows <- 1:pd
         }
         
@@ -200,7 +200,27 @@ extractrf <- function(x, response, predictors, element='R2') {
     return(value)
 }
 
-
+processFixedMod <- function(model, predictor, response, pname='lat', 
+                            rname='alpha') {
+    
+    postpars <- extract(model)
+    
+    post <- sapply(1:2, function(column) postpars$beta[,column])
+    
+    pars <- apply(post, 2, mean)
+    fitvals <- pars[1] + predictor*pars[2]
+    resids <- response - fitvals
+    
+    df <- data.frame(predictor=predictor,
+                     response=response,
+                     fit=fitvals,
+                     res=resids)
+    
+    names(df) <- c(pname, rname, paste0(rname,'fit'), paste0(rname,'res'))
+    
+   return(df)
+    
+}
 
 
 
