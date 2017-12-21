@@ -222,6 +222,28 @@ processFixedMod <- function(model, predictor, response, pname='lat',
     
 }
 
-
+autocor <- function(spdata, var, sp_list, permutations, res=FALSE,
+                    alt='greater', return='p-value') {
+    require(spdep)
+    
+    if (res) {
+        var <- paste0(var,'res')
+    }
+    
+    numvec <- spdata@data[,var]
+    
+    mI <- moran.mc(numvec, sp_list, permutations, alternative=alt)
+    
+    if (return=='p-value') {
+        value <- mI$p.value
+    } else if (return=='statistic') {
+        value <- mI$statistic
+        attributes(value) <- NULL
+    } else {
+        value <- mI
+    }
+    
+    return(value)
+}
 
 
