@@ -223,7 +223,7 @@ processFixedMod <- function(model, predictor, response, pname='lat',
 }
 
 autocor <- function(spdata, var, sp_list, permutations, res=FALSE,
-                    alt='greater', return='p-value') {
+                    alt='greater', return='all') {
     require(spdep)
     
     if (res) {
@@ -239,8 +239,10 @@ autocor <- function(spdata, var, sp_list, permutations, res=FALSE,
     } else if (return=='statistic') {
         value <- mI$statistic
         attributes(value) <- NULL
-    } else {
+    } else if (return=='all') {
         value <- mI
+    } else {
+        stop('return must be either p-value, statistic or all.')
     }
     
     return(value)
