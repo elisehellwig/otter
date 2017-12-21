@@ -2,8 +2,7 @@ datapath <- '/Users/echellwig/Drive/OtherPeople/otterData'
 library(spdep)
 library(raster)
 library(rgdal)
-
-
+source('functions.R')
 rdf <- read.csv(file.path(datapath, 'Residuals.csv'))
 
 
@@ -28,33 +27,36 @@ saveRDS(distnb, file.path(datapath, 'DistanceOtters.RDS'))
 klist <- nb2listw(knb)
 distlist <- nb2listw(distnb)
 
-set.seed(2818893)
-### Alpha ######
-kalpha <- moran.mc(rsp$alpha, klist, 99999)
-distalpha <- moran.mc(rsp$alpha, distlist, 99999)
+p <- 99999
 
-kresAG <- moran.mc(rsp$alphares, klist, 99999, alternative='greater')
-kresAL <- moran.mc(rsp$alphares, klist, 99999, alternative='less')
-distresAG <- moran.mc(rsp$alphares, distlist, 99999, 
-                      alternative='greater')
-distresAL <- moran.mc(rsp$alphares, distlist, 99999, alternative='less')
+vars <- c('alpha','beta','declineP')
+spID <- c(1,2) #1=KNN, 2=Distance based (10km)
+h1 <- c('greater','less')
+resid <- c(TRUE, FALSE)
 
 
-### Beta ######
+ao <- expand.grid(resid, h1, spID, vars, stringsAsFactors = FALSE)
+names(ao) <- c('resid', 'h1', 'spID','var')
+splist <- list(klist, distlist)
 
-kbeta <- moran.mc(rsp$beta, klist, 99999)
-distbeta <- moran.mc(rsp$beta, distlist, 99999)
 
-kresBG <- moran.mc(rsp$betares, klist, 99999, alternative='greater')
-kresBL <- moran.mc(rsp$betares, klist, 99999, alternative='less')
-distresBG <- moran.mc(rsp$betares, distlist, 99999, 
-                      alternative='greater')
-distresBL <- moran.mc(rsp$betares, distlist, 99999, alternative='less')
+set.seed(4678)
+pvals <- sapply(1:nrow(ao), function(i) {
+    autocor(rsp, ao[i,'var'], splist[[ ao[i,'spID'] ]], p, 
+            res=ao[i, 'resid'], alt=ao[i,'h1'], return='p-value')
+})
 
-### DeclineP ######
+set.seed(4678)
+morans <- sapply(1:nrow(ao), function(i) {
+    autocor(rsp, ao[i,'var'], splist[[ ao[i,'spID'] ]], p, 
+            res=ao[i, 'resid'], alt=ao[i,'h1'], return='statistic')
+})
 
-kDP <- moran.mc(rsp$declineP, klist, 99999)
-distDP <- moran.mc(rsp$declineP, distlist, 99999)
+morandf <- data.frame(var=ao$var,
+                 spmethod=ifelse(ao$spID==1, 'knn', 'dist'),
+                 h1=ao$h1,
+                 res=ifelse(ao$resid, 'residuals', 'originalData'),
+                 Moran=morans,
+                 pval=pvals)
 
-kresDP <- moran.mc(rsp$declinePres, klist, 99999)
-distresDP <- moran.mc(rsp$declinePres, distlist, 99999)
+write.csv(morandf, file.path(datapath, 'moranI.csv'), row.names = FALSE)
