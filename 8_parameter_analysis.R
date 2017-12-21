@@ -73,6 +73,7 @@ DPlist <- list(declineP=av$declineP,
 DPmod <- stan(model_code = DPfx, data=DPlist, iter=25000, warmup = 5000,
               chains=1, control=list(adapt_delta = 0.9999, max_treedepth=15))
 DPpost <- extract(DPmod)
+saveRDS(DPmod, file.path(datapath, 'models/DeclinePFixedModel.RDS'))
 saveRDS(DPpost, file.path(datapath, 'models/DeclinePFixedPost.RDS'))
 
 
@@ -85,6 +86,7 @@ Blist <- list(BETA=av$beta,
 Bmod <- stan(model_code = Bfx, data=Blist, iter=25000, warmup = 5000,
               chains=1, control=list(adapt_delta = 0.9999, max_treedepth=15))
 Bpost <- extract(Bmod)
+saveRDS(Bmod, file.path(datapath, 'models/BetaFixedModel.RDS'))
 saveRDS(Bpost, file.path(datapath, 'models/BetaFixedPost.RDS'))
 
 
@@ -96,6 +98,7 @@ Alist <- list(alpha=av$alpha,
 Amod <- stan(model_code = Afx, data=Alist, iter=25000, warmup = 5000,
              chains=1, control=list(adapt_delta = 0.9999, max_treedepth=15))
 Apost <- extract(Amod)
+saveRDS(Amod, file.path(datapath, 'models/AlphaFixedModel.RDS'))
 saveRDS(Apost, file.path(datapath, 'models/AlphaFixedPost.RDS'))
 
 
