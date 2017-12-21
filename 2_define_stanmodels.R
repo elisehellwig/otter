@@ -75,9 +75,9 @@ parameters{
 }  
 model {
     real mu;
-  //priors
+    //priors
     p ~ normal(0, sigma_p) ; 
-  //likelihood
+    //likelihood
     for (i in 1:N) {
         mu = beta + p[loc[i]];
         pop[i] ~ normal(mu, sigma);
@@ -90,8 +90,6 @@ saveRDS(otrlmm, file.path(datapath, 'models/varying1location.RDS'))
 
 
 ### varying FX for intercept and slope on location
-##note: we sample from z_u but we use u
-
 otrlmm2 <- '
 data{
     int<lower=1> N; //number of data points
@@ -124,18 +122,17 @@ model {
     }
 }
 '
-saveRDS(otrlmm2, file.path(datapath, 'models/varying2location.RDS'))
+saveRDS(otrlmm, file.path(datapath, 'models/varying2location.RDS'))
 
 
-#############################################################
-########################### pups ##############################
 
+### parameter analysis
 
-linearpup <- '
+DPfixed <- linear <- '
 data{
     int<lower=1> N; //number of data points
-    real pups[N]; //dependent variable, otter population
-    real year[N]; //predictor variable, year
+    real declineP[N]; //dependent variable, likelihood of decline
+    real Latitude[N]; //predictor variable, latitude
 }
 parameters{
     vector[2] beta;
@@ -144,75 +141,19 @@ parameters{
 model {
     real mu;
     for (i in 1:N) {
-        mu = beta[1] + beta[2] * year[i];
-        pups[i] ~ normal(mu, sigma);
-    }
-}
-'
-saveRDS(linearpup, file.path(datapath, 'models/puplinear.RDS'))
-
-poispup <- 'data{
-    int<lower=1> N; //number of data points
-    real pups[N]; //dependent variable, otter population
-    real year[N]; //predictor variable, year
-}
-parameters{
-    vector[2] beta;
-    real mu;
-    real <lower=0> lambda;
-}  
-model {
-    for (i in 1:N) {
-        mu = beta[1] + beta[2] * year[i];
-        lambda = exp(mu);
-        pups[i] ~ poisson(lambda);
+        mu = beta[1] + beta[2] * Latitude[i];
+        declineP[i] ~ normal(mu, sigma);
     }
 }
 '
 
-saveRDS(poispup, file.path(datapath, 'models/puppoisson.RDS'))
-
-
-
-
-puprlmm <- '
+DPmixed <- '
 data{
     int<lower=1> N; //number of data points
     int P; //number of locations
-    real pups[N]; //dependent variable, otter population
-    real year[N]; //predictor variable, year
+    real declineP[N]; //dependent variable, likelihood of decline
+    real Latitude[N]; //predictor variable, latitude
     int <lower=1, upper=P> loc[N]; //location id
-
-}
-parameters{
-    real beta;
-    real <lower=0> sigma;
-    vector[P] p; //location intercepts 
-    real <lower=0> sigma_p;
-}  
-model {
-    real mu;
-    //priors
-    p ~ normal(0, sigma_p) ; 
-    //likelihood
-    for (i in 1:N) {
-        mu = beta + p[loc[i]];
-        pups[i] ~ normal(mu, sigma);
-    }
-}
-'
-saveRDS(puprlmm, file.path(datapath, 'models/puprvarying1location.RDS'))
-
-
-### varying FX for intercept and slope on location
-puprlmm2 <- '
-data{
-    int<lower=1> N; //number of data points
-    int P; //number of locations
-    real pups[N]; //dependent variable, otter population
-    real year[N]; //predictor variable, year
-    int <lower=1, upper=P> loc[N]; //location id
-
 }
 parameters{
     vector[2] beta;
@@ -232,12 +173,12 @@ model {
     to_vector(z_u) ~ normal(0,1);
     //likelihood
     for (i in 1:N) {
-    mu = beta[1] + u[1,loc[i]] + (beta[2] + u[2, loc[i]]) * year[i];
-    pups[i] ~ normal(mu, sigma);
+        mu = beta[1] + u[1,loc[i]] + (beta[2] + u[2, loc[i]]) * year[i];
+        declineP[i] ~ normal(mu, sigma);
     }
 }
 '
-saveRDS(puprlmm2, file.path(datapath, 'models/puprvarying2location.RDS'))
+
 
 
 
