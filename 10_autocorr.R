@@ -4,41 +4,57 @@ library(raster)
 library(rgdal)
 
 
-av <- read.csv(file.path(datapath, 'allvars.csv'))
+rdf <- read.csv(file.path(datapath, 'Residuals.csv'))
+
 
 ####################################################################
 ####################################################################
 
 #9km
+rsp <- SpatialPointsDataFrame(coords=rdf[,c('Longitude','Latitude'), ],
+                               proj4string=CRS("+init=epsg:4326"), data=rdf)
 
-avsp <- SpatialPointsDataFrame(coords=av[,c('Longitude','Latitude'), ],
-                               proj4string=CRS("+init=epsg:4326"), data=av)
-
-writeOGR(avsp, dsn=file.path(datapath, 'otterSPDF.GeoJSON'),
+writeOGR(rsp, dsn=file.path(datapath, 'otterSPDF.GeoJSON'),
          layer='"OGRGeoJSON"', driver='GeoJSON')
 
-knear <- knearneigh(avsp, k=3, longlat=TRUE)
-knb <- knn2nb(knear, row.names = avsp$loc)
+knear <- knearneigh(rsp, k=3, longlat=TRUE)
+knb <- knn2nb(knear, row.names = rsp$loc)
 saveRDS(knb, file.path(datapath, 'kNearOtters.RDS'))
 
-distnb <- dnearneigh(avsp, d1=0, d2=10, longlat=TRUE, row.names=avsp$loc)
+distnb <- dnearneigh(rsp, d1=0, d2=10, longlat=TRUE, row.names=rsp$loc)
 saveRDS(distnb, file.path(datapath, 'DistanceOtters.RDS'))
 
 
 klist <- nb2listw(knb)
 distlist <- nb2listw(distnb)
 
-kmetric <- moran.mc(avsp$metric, klist, 99999)
-distmetric <- moran.mc(avsp$metric, distlist, 99999)
+set.seed(2818893)
+### Alpha ######
+kalpha <- moran.mc(rsp$alpha, klist, 99999)
+distalpha <- moran.mc(rsp$alpha, distlist, 99999)
 
-kalpha <- moran.mc(avsp$alpha, klist, 99999)
-distalpha <- moran.mc(avsp$alpha, distlist, 99999)
+kresAG <- moran.mc(rsp$alphares, klist, 99999, alternative='greater')
+kresAL <- moran.mc(rsp$alphares, klist, 99999, alternative='less')
+distresAG <- moran.mc(rsp$alphares, distlist, 99999, 
+                      alternative='greater')
+distresAL <- moran.mc(rsp$alphares, distlist, 99999, alternative='less')
 
-kbeta <- moran.mc(avsp$beta, klist, 99999)
-distbeta <- moran.mc(avsp$beta, distlist, 99999)
 
-kDP <- moran.mc(avsp$declineP, klist, 99999)
-distDP <- moran.mc(avsp$declineP, distlist, 99999)
+### Beta ######
 
-kAres <- moran.mc(avsp$Ares, klist, 99999)
-distAres <- moran.mc(avsp$Ares, distlist, 99999)
+kbeta <- moran.mc(rsp$beta, klist, 99999)
+distbeta <- moran.mc(rsp$beta, distlist, 99999)
+
+kresBG <- moran.mc(rsp$betares, klist, 99999, alternative='greater')
+kresBL <- moran.mc(rsp$betares, klist, 99999, alternative='less')
+distresBG <- moran.mc(rsp$betares, distlist, 99999, 
+                      alternative='greater')
+distresBL <- moran.mc(rsp$betares, distlist, 99999, alternative='less')
+
+### DeclineP ######
+
+kDP <- moran.mc(rsp$declineP, klist, 99999)
+distDP <- moran.mc(rsp$declineP, distlist, 99999)
+
+kresDP <- moran.mc(rsp$declinePres, klist, 99999)
+distresDP <- moran.mc(rsp$declinePres, distlist, 99999)
