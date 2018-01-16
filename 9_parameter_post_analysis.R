@@ -3,6 +3,9 @@ options(stringsAsFactors = FALSE)
 library(rstan)
 library(ggplot2)
 library(rethinking)
+library(reshape2)
+source('functions.R')
+
 av <- read.csv(file.path(datapath, 'allvars.csv'))
 Afp <- readRDS(file.path(datapath, 'models/AlphaFixedPost.RDS'))
 Bfp <- readRDS(file.path(datapath, 'models/BetaFixedPost.RDS'))
@@ -13,7 +16,20 @@ Bmod <- readRDS(file.path(datapath, 'models/BetaFixedModel.RDS'))
 DPmod <- readRDS(file.path(datapath, 'models/DeclinePFixedModel.RDS'))
 
 
-source('functions.R')
+Afit <- modfit(Amod)
+Bfit <- modfit(Bmod)
+DPfit <- modfit(DPmod)
+
+
+####
+
+
+
+respvars <- c('alpha','beta','declineP')
+char <- c('PopSize', 'PopTrend','DeclineProb')
+
+
+
 
 ###########################################################################
 ###########################################################################
@@ -53,5 +69,30 @@ modres <- cbind(Ares, Bres[,2:4], DPres[,2:4])
 ResidDF <- merge(av[,avars], modres, by.x='latitude', by.y='lat')
 
 write.csv(ResidDF, file.path(datapath, 'Residuals.csv'), row.names = FALSE)
+
+#######################################################
+#37.7-38.3 centered: 37.98501, scaled:0.10711
+
+brvars <- c('declineP','alpha','beta','Latitude','latitude')
+
+avr <- av[,brvars]
+avr$type <- 'obs'
+
+LatX <- seq(37.8, 38.22, by=0.1)
+latX <- (LatX - 37.98501)/0.10711
+
+avfit <- data.frame(Latitude=LatX,
+                    latitude=latX,
+                    type='fit',
+                    alpha=Afit(latX),
+                    beta=Bfit(latX),
+                    declineP=DPfit(latX))
+
+AV <- rbind(avr, avfit)
+avm <- melt(AV, id.vars=c('Latitude','latitude','type'), 
+            variable.name = 'response', value.name = 'value')
+
+write.csv(avm, file.path(datapath, 'LatitudeModelResults.csv'), 
+          row.names = FALSE)
 
 
