@@ -140,6 +140,8 @@ parameters{
 }  
 model {
     real mu;
+    beta[1] ~ normal(0, 10);
+    beta[2] ~ normal(0, 2);
     for (i in 1:N) {
         mu = beta[1] + beta[2] * Latitude[i];
         declineP[i] ~ normal(mu, sigma);
@@ -162,6 +164,8 @@ parameters{
 }  
 model {
     real mu;
+    beta[1] ~ normal(0, 10);
+    beta[2] ~ normal(0, 2);
     for (i in 1:N) {
         mu = beta[1] + beta[2] * Latitude[i];
         BETA[i] ~ normal(mu, sigma);
@@ -183,6 +187,8 @@ parameters{
 }  
 model {
     real mu;
+    beta[1] ~ normal(0, 10);
+    beta[2] ~ normal(0, 2);
     for (i in 1:N) {
         mu = beta[1] + beta[2] * Latitude[i];
         alpha[i] ~ normal(mu, sigma);
