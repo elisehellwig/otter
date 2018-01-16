@@ -248,4 +248,38 @@ autocor <- function(spdata, var, sp_list, permutations, res=FALSE,
     return(value)
 }
 
+modfit <- function(stanmod) {
+    ab <- get_posterior_mean(stanmod)[1:2]
+    attributes(ab) <- NULL
+    
+    fitfun <- function(x) {
+        y <- ab[1] + ab[2]*x
+        return(y)
+    }
+    
+    return(fitfun)
+} 
+    
+
+formulastring <- function(mod, yvar='y', xvar='x', sf=2, greek=FALSE) {
+    
+    require(rstan)
+    
+    AB <- get_posterior_mean(mod)[1:2]
+    attributes(AB) <- NULL
+    
+    a <- round(AB[1], sf)
+    b <- round(AB[2], sf)
+    
+    if (greek) {
+        xvar <- paste0('(', xvar,')')
+        fmla <- paste(yvar, '==', b, xvar, '+', a)
+    } else {
+        fmla <- paste0(yvar, ' = ', b, xvar, ' + ', a)
+    }
+    
+    return(fmla)
+    
+}
+
 
