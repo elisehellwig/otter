@@ -12,6 +12,8 @@ source('functions.R')
 
 #otr$cpop <- scale(otr$pop) #4.62 center; 2.15 scale
 #attributes(otr$cpop) <- NULL
+
+#note if a prior is not specified it is uniform.
 ##########################################################
 
 locfac <- factor(otr$location)
