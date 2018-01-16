@@ -3,11 +3,7 @@ library(spdep)
 library(raster)
 library(rgdal)
 source('functions.R')
-<<<<<<< HEAD
-=======
 
-
->>>>>>> aea983209de908bb3e9277e67e3da12ad58454d0
 rdf <- read.csv(file.path(datapath, 'Residuals.csv'))
 
 
@@ -35,28 +31,10 @@ distlist <- nb2listw(distnb)
 p <- 99999
 
 vars <- c('alpha','beta','declineP')
-<<<<<<< HEAD
 spID <- c(1,2) #1=KNN, 2=Distance based (10km)
 h1 <- c('greater','less')
 resid <- c(TRUE, FALSE)
-=======
->>>>>>> aea983209de908bb3e9277e67e3da12ad58454d0
 
-set.seed(4678)
-pvalG <- data.frame(knn=sapply(vars, function(v) {
-                       autocor(rsp, v, klist, p, return='p-value')
-                            }),  
-                     knnRES=sapply(vars, function(v) {
-                       autocor(rsp, v, klist, p, res=TRUE, return='p-value')
-                            }),
-                     dist=sapply(vars, function(v) {
-                       autocor(rsp, v, distlist, p, return='p-value')
-                            }),
-                     distRES=sapply(vars, function(v) {
-                       autocor(rsp, v, distlist, p, res=TRUE, return='p-value')
-                           }))
-
-<<<<<<< HEAD
 ao <- expand.grid(resid, h1, spID, vars, stringsAsFactors = FALSE)
 names(ao) <- c('resid', 'h1', 'spID','var')
 splist <- list(klist, distlist)
