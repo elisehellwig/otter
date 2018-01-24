@@ -4,12 +4,14 @@ library(rstan)
 library(rethinking)
 library(randomForest)
 library(parallel)
+library(betareg)
 source('functions.R')
 options(mc.cores = 3)
 
 av <- read.csv(file.path(datapath, 'allvars.csv'))
 
 DPfx <- readRDS(file.path(datapath, 'models/DPfixedFX.RDS'))
+DPbrfx <- readRDS(file.path(datapath, 'models/DPbetaregFX.RDS'))
 Bfx <-readRDS(file.path(datapath, 'models/BETAfixedFX.RDS'))
 Afx <-readRDS(file.path(datapath, 'models/alphafixedFX.RDS'))
 
@@ -50,7 +52,15 @@ saveRDS(DPmod, file.path(datapath, 'models/DeclinePFixedModel.RDS'))
 saveRDS(DPpost, file.path(datapath, 'models/DeclinePFixedPost.RDS'))
 
 
+Latmat <- matrix(c(rep(1, nrow(av)), av$latitude), ncol=2)
+DPbrlist <- list(N=nrow(av), K=ncol(Latmat), declineP=av$declineP, X=Latmat)
 
+DPbr_mod <- stan(model_code = DPbrfx, data=DPbrlist, iter=4000, warmup=2000, 
+              chains=4)
+
+
+
+##################
 set.seed(29918)
 Blist <- list(BETA=av$beta,
                Latitude=av$latitude,
