@@ -198,3 +198,39 @@ model {
 saveRDS(alphafixed, file.path(datapath, 'models/alphafixedFX.RDS'))
 
 
+DPbetareg <- '
+data{
+    int<lower=1> N; //number of data points
+    int<lower=1> K; //number of predictors
+    vector<lower=0, upper=1>[N] declineP; //response, likelihood of decline
+    matrix[N,K] X; // predictor matrix
+}
+parameters{
+    vector[K] beta;
+    real<lower=0> phi;
+}  
+model {
+    //Model calculations
+    vector[N] Xbeta; //linear predictor
+    vector[N] mu; //transformed linear predictor
+    vector[N] A; // parameter for beta dist
+    vector[N] B; //parameter for beta dist
+
+    Xbeta = X * beta
+    for (i in 1:N) {
+        mu[i] = inv_logit(Xbeta[i]);
+    }
+    
+    A = mu * phi;
+    B = (1.0 - mu)*phi;
+
+    //priors
+    beta ~ normal(0,1);
+    phi ~ cauchy(0,5);
+
+    //likelihood
+    declineP ~ beta(A,B);
+}
+'
+saveRDS(DPbetareg, file.path(datapath, 'models/DPbetaregFX.RDS'))
+
