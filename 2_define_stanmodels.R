@@ -216,13 +216,13 @@ model {
     vector[N] A; // parameter for beta dist
     vector[N] B; //parameter for beta dist
 
-    Xbeta = X * beta
+    Xbeta = X * beta;
     for (i in 1:N) {
         mu[i] = inv_logit(Xbeta[i]);
     }
     
     A = mu * phi;
-    B = (1.0 - mu)*phi;
+    B = (1.0 - mu) * phi;
 
     //priors
     beta ~ normal(0,1);
