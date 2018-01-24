@@ -51,13 +51,15 @@ DPpost <- rstan::extract(DPmod)
 saveRDS(DPmod, file.path(datapath, 'models/DeclinePFixedModel.RDS'))
 saveRDS(DPpost, file.path(datapath, 'models/DeclinePFixedPost.RDS'))
 
-
+set.seed(1231)
 Latmat <- matrix(c(rep(1, nrow(av)), av$latitude), ncol=2)
 DPbrlist <- list(N=nrow(av), K=ncol(Latmat), declineP=av$declineP, X=Latmat)
 
-DPbr_mod <- stan(model_code = DPbrfx, data=DPbrlist, iter=4000, warmup=2000, 
-              chains=4)
-
+DPbr_mod <- stan(model_code = DPbrfx, data=DPbrlist, iter=25000, warmup=5000, 
+              chains=1)
+DPbrpost <- rstan::extract(DPbr_mod)
+saveRDS(DPbr_mod, file.path(datapath, 'models/DeclinePBetaRegModel.RDS'))
+saveRDS(DPbrpost, file.path(datapath, 'models/DeclinePBetaRegPost.RDS'))
 
 
 ##################
