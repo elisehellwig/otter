@@ -143,4 +143,19 @@ png(file.path(datapath, 'plots/LatBeta.png'), width=1000, height = 800,
 breg
 dev.off()
 
+av_decline <- avm[avm$response=='declineP', ]
+DPreg <- ggplot() + geom_point(aes(x=Latitude, y=value), size=2.7,
+                               data=av_decline[av_decline$type=='obs',])
+DPreg <- DPreg + geom_line(aes(x=Latitude, y=value), color='purple4',
+                           size=1.5, data=av_decline[av_decline$type=='fit',])
+#DPreg <- DPreg + geom_text(aes(x=38, y=0.75, label=formulastring(DPmod)),
+                           #hjust=0, size=5.5, color='purple4')
+DPreg <- DPreg + coord_cartesian(ylim = c(0, 0.85)) + theme_bw(17)
+DPreg <- DPreg + labs(y='Probability of Population Decline')
+
+
+png(file.path(datapath, 'plots/LatDP.png'), width=1000, height = 800, 
+    res=150)
+DPreg
+dev.off()
 
