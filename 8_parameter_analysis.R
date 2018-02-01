@@ -23,7 +23,9 @@ varinds <- c(10,18)
 varnames <- c('Latitude','region')
 respvars <- c('alpha','beta','declineP')
 
-fullrf <- lapply(respvars, function(var) extractrf(av, var, varinds, 'model'))
+fullrf <- lapply(respvars, function(var) {
+    extractrf(av, var, varinds, 'model', imp=TRUE)
+    })
 selectedrf <- lapply(respvars, function(var) {
     extractrf(av, var, varnames, 'model') 
     })
