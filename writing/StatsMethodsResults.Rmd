@@ -1,0 +1,18 @@
+---
+title: "Otter Population Analysis Methods and Results"
+author: "E Hellwig"
+date: "2/1/2018"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+
+
+```
+
+
+# Methods
+
+## Population Analysis
+
