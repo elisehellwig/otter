@@ -10,17 +10,18 @@ av <- read.csv(file.path(datapath, 'allvars.csv'))
 Afp <- readRDS(file.path(datapath, 'models/AlphaFixedPost.RDS'))
 Bfp <- readRDS(file.path(datapath, 'models/BetaFixedPost.RDS'))
 DPfp <- readRDS(file.path(datapath, 'models/DeclinePFixedPost.RDS'))
+DPbr <- readRDS(file.path(datapath, 'models/DeclinePBetaRegPost.RDS'))
+
 
 Amod <- readRDS(file.path(datapath, 'models/AlphaFixedModel.RDS'))
 Bmod <- readRDS(file.path(datapath, 'models/BetaFixedModel.RDS'))
 DPmod <- readRDS(file.path(datapath, 'models/DeclinePFixedModel.RDS'))
+DPbrmod <- readRDS(file.path(datapath, 'models/DeclinePBetaRegModel.RDS'))
 
 
 Afit <- modfit(Amod)
 Bfit <- modfit(Bmod)
-DPfit <- modfit(DPmod)
-
-
+DPfit <- modfit(DPbrmod, betareg = TRUE)
 ####
 
 
@@ -55,7 +56,7 @@ Bdf <- data.frame(mu=apply(Bpost, 2, mean),
 Bres <- processFixedMod(Bmod, av$latitude, av$beta, rname='beta')
 ###DeclineP
 
-DPpost <- sapply(1:2, function(column) DPfp$beta[,column])
+DPpost <- sapply(1:2, function(column) DPbr$beta[,column])
 DPdf <- data.frame(mu=apply(DPpost, 2, mean),
                   lower=apply(DPpost, 2, HPDI, prob=0.95)[1,],
                   upper=apply(DPpost, 2, HPDI, prob=0.95)[2,])
