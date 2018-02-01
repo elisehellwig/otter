@@ -161,7 +161,7 @@ createformula <- function(data, responsevar, predictornames=NA,
 }
 
 
-extractrf <- function(x, response, predictors, element='R2') {
+extractrf <- function(x, response, predictors, element='R2', imp=FALSE) {
     require(randomForest)
     
     if ('randomForest' %in% class(x)) {
@@ -177,7 +177,7 @@ extractrf <- function(x, response, predictors, element='R2') {
         }
         
 
-        rfmod <- randomForest(fmla, x)
+        rfmod <- randomForest(fmla, x, importance=imp)
     } else {
         stop('x must either be a randomForest object or a data.frame')
     }
@@ -248,13 +248,28 @@ autocor <- function(spdata, var, sp_list, permutations, res=FALSE,
     return(value)
 }
 
-modfit <- function(stanmod) {
-    ab <- get_posterior_mean(stanmod)[1:2]
-    attributes(ab) <- NULL
+modfit <- function(stanmod, betareg=FALSE) {
+    abc <- get_posterior_mean(stanmod)[1:3]
+    attributes(abc) <- NULL
     
-    fitfun <- function(x) {
-        y <- ab[1] + ab[2]*x
-        return(y)
+    
+    if (betareg) {
+        
+        fitfun <- function(x) {
+            mat <- matrix(c(rep(1, length(x)), x), ncol=2)
+            mc <- mat %*% abc[1:2]
+            mu <- inv_logit(mc)
+            
+            return(mu)
+        }
+        
+        
+    } else {
+        ab <- abc[1:2]
+        fitfun <- function(x) {
+            y <- ab[1] + ab[2]*x
+            return(y)
+        }
     }
     
     return(fitfun)
@@ -281,5 +296,29 @@ formulastring <- function(mod, yvar='y', xvar='x', sf=2, greek=FALSE) {
     return(fmla)
     
 }
+
+
+BRpostlink <- function(dat, coefs, phi) {
+    
+    mat <- matrix(c(rep(1, length(dat)), dat), ncol=2)
+    mc <- mat %*% coefs
+    mu <- inv_logit(mc)
+    
+    A <- mu*phi
+    B <- (1-mu)*phi
+    
+    fits <- beta(A, B)
+    return(fits)
+}
+
+
+BetaRegFit <- function(mod) { 
+    
+}
+
+
+
+
+
 
 
