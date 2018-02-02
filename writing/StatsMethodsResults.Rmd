@@ -16,3 +16,10 @@ knitr::opts_chunk$set(echo = FALSE)
 
 ## Population Analysis
 
+
+The otter total otter population consists of 14 subpopulations, which are split up into four regional groupings based on expert opinion. Each subpopulation's home range is also classified as primarily estuary, lagoon, reservoir, or stream. 
+
+The statistical analysis was conducted in two parts. First we used a Bayesian multi-lavel/mixed effects linear model to examine estimate key characteristics about the different subpopulations. This includes initial populations size, population growth rate and likelihood that the population is in decline. 
+The second part of the analysis focused on investigating correlations between differences in those key characteristics and the populations location attributes. The Bayesian methodology was used because it better lends itself to small data sets.
+
+We fit a 
