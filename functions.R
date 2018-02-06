@@ -312,13 +312,4 @@ BRpostlink <- function(dat, coefs, phi) {
 }
 
 
-BetaRegFit <- function(mod) { 
-    
-}
-
-
-
-
-
-
 
