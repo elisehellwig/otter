@@ -35,9 +35,6 @@ b1samples <- data.frame(sapply(1:14, function(loc) {
 }))
 names(b1samples) <- locs
 
-b1quants <- t(round(apply(b1samples, 2, quantile, probs=c(0.025, .10, .25,
-                                                          .5, .75,.9, .975)),3))
-
 
 locpredict <- sapply(1:14, function(i) {
     locpost(vl2, i, 'u', response='function')
@@ -59,6 +56,11 @@ dfci$location <- rep(locs, length(yrs))
 names(dfci) <- c('ID','YearID','P_Otters','Lower95','Upper95','Site')
 dfci$Year <- dfci$YearID + 2012
 dfm <- merge(dfci, otr2, all.x = TRUE)
+
+dpSites <- c('Muir','Bolinas','Tennessee')
+posSites <- c('Alpine','Giacomini','NTB','Peters')
+dfm$SiteColor <- ifelse(dfm$Site %in% posSites, "Pos", "None")
+dfm[dfm$Site %in% dpSites, 'SiteColor'] <- 'Neg'
 
 write.csv(dfm, file.path(datapath, 'vis/popplot.csv'), row.names = FALSE)
 
