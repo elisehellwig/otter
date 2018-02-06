@@ -5,6 +5,8 @@ library(rethinking)
 library(randomForest)
 library(parallel)
 library(betareg)
+library(plyr)
+library(reshape2)
 source('functions.R')
 options(mc.cores = 3)
 
@@ -31,6 +33,14 @@ selectedrf <- lapply(respvars, function(var) {
     })
 
 saveRDS(fullrf, file.path(datapath, 'fullrandomForest.RDS'))
+fullimp <- sapply(fullrf, function(i) as.numeric(importance(i, type=2)))
+fullimp <- as.data.frame(apply(fullimp, 2, scale, center=FALSE))
+
+names(fullimp) <- respvars
+fullimp$attribute <- rownames(importance(fullrf[[1]]))
+fullimpm <- melt(fullimp, id.var='attribute', variable.name = 'characteristic')
+saveRDS(fullimp, file.path(datapath, 'fullRFvariableimportance.RDS'))
+
 saveRDS(selectedrf, file.path(datapath, 'selectrandomForest.RDS'))
 
 
