@@ -39,7 +39,7 @@ fullimp <- as.data.frame(apply(fullimp, 2, scale, center=FALSE))
 names(fullimp) <- respvars
 fullimp$attribute <- rownames(importance(fullrf[[1]]))
 fullimpm <- melt(fullimp, id.var='attribute', variable.name = 'characteristic')
-saveRDS(fullimp, file.path(datapath, 'fullRFvariableimportance.RDS'))
+saveRDS(fullimpm, file.path(datapath, 'fullRFvariableimportance.RDS'))
 
 saveRDS(selectedrf, file.path(datapath, 'selectrandomForest.RDS'))
 
