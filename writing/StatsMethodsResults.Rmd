@@ -7,6 +7,35 @@ output: pdf_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
+library(ggplot2)
+library(rgdal)
+library(dismo)
+library(randomForest)
+source('../functions.R')
+#source('functions.R')
+
+datapath <- '../../otterData/'
+
+#####for big population plot
+pp <- read.csv(file.path(datapath, 'vis/popplot.csv')) 
+
+lvlNames <- c('Abbotts Lagoon', 'Alpine Reservoir', 'Bass Lake','Bolinas',
+              'Drakes Bay', 'El Estero', 'Giacomini Wetlands','Las Gallinas',
+              'Madera Creek', 'Muir Woods','North Tomales Bay','Peters Dam',
+              'Rodeo Lagoon','Tennessee Valley')
+levels(pp$Site) <- lvlNames
+
+######Locations of otter populations
+locs <- readOGR(dsn=file.path(datapath, 'otterSPDF.GeoJSON'),
+                layer="OGRGeoJSON")
+
+
+##full randomforest
+fullrf <- readRDS(file.path(datapath, 'fullrandomForest.RDS'))
+fullimp <- readRDS(file.path(datapath, 'fullRFvariableimportance.RDS'))
+
+
+
 
 
 ```
@@ -22,4 +51,60 @@ The otter total otter population consists of 14 subpopulations, which are split 
 The statistical analysis was conducted in two parts. First we used a Bayesian multi-lavel/mixed effects linear model to examine estimate key characteristics about the different subpopulations. This includes initial populations size, population growth rate and likelihood that the population is in decline. 
 The second part of the analysis focused on investigating correlations between differences in those key characteristics and the populations location attributes. The Bayesian methodology was used because it better lends itself to small data sets.
 
-We fit a 
+All  statistical analyses were conducted in R, and all regression based models were constructed with the 'RStan' package (citation).
+
+We fit a Bayesian multilevel linear model to the population data, using year as the predictor variable and otter population size as the response variable. Additionally, subpopulation location was included as a varying effect to control for spatial autocorrelation. This model structure made it easy to estimate both population growth rate and intial population size for each subpopulation. We calculated the likelihood of decline for each sub-population by summing the total number of samples with the predictor variable's coefficient less than zero and dividing by the total number of samples. 
+
+Once we calculated these three characteristics for each subpopluation, we then went about investigating potential correlations between differences in the characteristics between subpopulations and differences in other subpopulation attributes Do to the large number of potential attributes relative to to the number of observations (subpopulations), Random Forest models (citation) were fit to identify the most important of these attributes in predicticting differences between the subpopulation characteristic values. One randomForest model was fit for each of the three charateristics, population growth rate, initial population size and probability of decline. Then the variable importance measure identified the most important variables for predicting these model parameters.
+
+To confirm the results of the Random Forest, we tested the dataset for indicators of autocorrelation using 'spdep' (citation). Next we fit fixed effects Bayesian generalized linear models using the most important variables to the characteristics data. We then we retested the residuals from those models to see if the issue had been controlled.
+
+
+# Results
+
+## Population Analysis
+
+```{r pop_plot }
+
+popplot <- ggplot(data=pp) + geom_line(aes(x=Year, y=P_Otters), size=0.7)
+popplot <- popplot + geom_ribbon(aes(x=Year, min=Lower95, max=Upper95), 
+                                 alpha=0.3)
+popplot <- popplot + geom_point(aes(x=Year, y=O_Otters), size=1.2)
+popplot <- popplot + facet_wrap(~Site) + theme_bw(10)
+popplot <- popplot + scale_y_continuous(breaks=seq(0, 15, by=5))
+popplot <- popplot + scale_x_continuous(breaks=seq(2013, 2021, by=2))
+popplot <- popplot + coord_cartesian(ylim = c(0, 15)) 
+popplot <- popplot + labs(x='Year', y='Otter Population')
+
+popplot
+
+```
+
+
+
+
+```{r random_forest}
+
+vars <- c('Initial Population Size', 'Change in Population size',
+          'Probability of Decline')
+
+
+
+par(mfrow=c(3,1), cex=.7, mar=c(3,2,2,1))
+for (i in 1:length(fullrf)){
+    varImpPlot(fullrf[[i]], main=vars[i])
+}
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
