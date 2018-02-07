@@ -11,6 +11,7 @@ library(ggplot2)
 library(rgdal)
 library(dismo)
 library(randomForest)
+library(knitr)
 source('../functions.R')
 #source('functions.R')
 
@@ -25,6 +26,10 @@ lvlNames <- c('Abbotts Lagoon', 'Alpine Reservoir', 'Bass Lake','Bolinas',
               'Rodeo Lagoon','Tennessee Valley')
 levels(pp$Site) <- lvlNames
 
+
+b1Q <- read.csv(file.path(datapath, 'beta1quantiles.csv'))
+
+
 ######Locations of otter populations
 locs <- readOGR(dsn=file.path(datapath, 'otterSPDF.GeoJSON'),
                 layer="OGRGeoJSON")
@@ -35,8 +40,9 @@ fullrf <- readRDS(file.path(datapath, 'fullrandomForest.RDS'))
 fullimp <- readRDS(file.path(datapath, 'fullRFvariableimportance.RDS'))
 
 
-
-
+#########################
+#color palettes
+sitecolors <- c('#4393c3','#252525',"#ca0020")
 
 ```
 
@@ -46,16 +52,16 @@ fullimp <- readRDS(file.path(datapath, 'fullRFvariableimportance.RDS'))
 ## Population Analysis
 
 
-The otter total otter population consists of 14 subpopulations, which are split up into four regional groupings based on expert opinion. Each subpopulation's home range is also classified as primarily estuary, lagoon, reservoir, or stream. 
+The otter total otter population consists of 14 groups, which are split up into four regions based on expert opinion. Each groups's home range is also classified as primarily estuary, lagoon, reservoir, or stream. 
 
-The statistical analysis was conducted in two parts. First we used a Bayesian multi-lavel/mixed effects linear model to examine estimate key characteristics about the different subpopulations. This includes initial populations size, population growth rate and likelihood that the population is in decline. 
+The statistical analysis was conducted in two parts. First we used a Bayesian multi-lavel/mixed effects linear model to examine estimate key characteristics about the different otter groups. This includes initial group size, population growth rate and likelihood that the group is in decline. 
 The second part of the analysis focused on investigating correlations between differences in those key characteristics and the populations location attributes. The Bayesian methodology was used because it better lends itself to small data sets.
 
 All  statistical analyses were conducted in R, and all regression based models were constructed with the 'RStan' package (citation).
 
-We fit a Bayesian multilevel linear model to the population data, using year as the predictor variable and otter population size as the response variable. Additionally, subpopulation location was included as a varying effect to control for spatial autocorrelation. This model structure made it easy to estimate both population growth rate and intial population size for each subpopulation. We calculated the likelihood of decline for each sub-population by summing the total number of samples with the predictor variable's coefficient less than zero and dividing by the total number of samples. 
+We fit a Bayesian multilevel linear model to the population data, using year as the predictor variable and otter group size as the response variable. Additionally, group location was included as a varying effect to control for spatial autocorrelation. This model structure made it easy to estimate both population growth rate and intial population size for each group. We calculated the likelihood of decline for each group by summing the total number of samples with the predictor variable's coefficient less than zero and dividing by the total number of samples. 
 
-Once we calculated these three characteristics for each subpopluation, we then went about investigating potential correlations between differences in the characteristics between subpopulations and differences in other subpopulation attributes Do to the large number of potential attributes relative to to the number of observations (subpopulations), Random Forest models (citation) were fit to identify the most important of these attributes in predicticting differences between the subpopulation characteristic values. One randomForest model was fit for each of the three charateristics, population growth rate, initial population size and probability of decline. Then the variable importance measure identified the most important variables for predicting these model parameters.
+Once we calculated these three characteristics for each group, we then went about investigating potential correlations between differences in the characteristics between group and differences in other group attributes Do to the large number of potential attributes relative to to the number of observations (group), Random Forest models (citation) were fit to identify the most important of these attributes in predicting differences between the group characteristic values. One randomForest model was fit for each of the three charateristics, population growth rate, initial group size and probability of decline. Then the variable importance measure identified the most important variables for predicting these model parameters.
 
 To confirm the results of the Random Forest, we tested the dataset for indicators of autocorrelation using 'spdep' (citation). Next we fit fixed effects Bayesian generalized linear models using the most important variables to the characteristics data. We then we retested the residuals from those models to see if the issue had been controlled.
 
@@ -64,23 +70,37 @@ To confirm the results of the Random Forest, we tested the dataset for indicator
 
 ## Population Analysis
 
-```{r pop_plot }
+Of the 14 otter groups, four of them show strong evidence of increasing population sizes: Alpine Reservoir, Giacomini Wetlands, North Tomales Bay and Peters Dam (Figure 1, Table 1). Of the remaining otter sites, have a greater than 50% likelihood that they are in decline, based on the **monte carlo** sampling. For the other seven groups, there is not enough data at this time to make any strong conclusions. 
 
-popplot <- ggplot(data=pp) + geom_line(aes(x=Year, y=P_Otters), size=0.7)
-popplot <- popplot + geom_ribbon(aes(x=Year, min=Lower95, max=Upper95), 
-                                 alpha=0.3)
-popplot <- popplot + geom_point(aes(x=Year, y=O_Otters), size=1.2)
-popplot <- popplot + facet_wrap(~Site) + theme_bw(10)
-popplot <- popplot + scale_y_continuous(breaks=seq(0, 15, by=5))
-popplot <- popplot + scale_x_continuous(breaks=seq(2013, 2021, by=2))
-popplot <- popplot + coord_cartesian(ylim = c(0, 15)) 
-popplot <- popplot + labs(x='Year', y='Otter Population')
+```{r pop_plot, warning=FALSE, fig.cap='Predicted and observed otter population sizes by site. The points indicate observed otter group sizes, while the lines indicate predicted populations.'}
 
-popplot
+popp <- ggplot(data=pp) + geom_line(aes(x=Year, y=P_Otters, color=SiteColor),
+                                    size=0.7)
+popp <- popp + geom_ribbon(aes(x=Year, min=Lower95, max=Upper95), alpha=0.3)
+popp <- popp + geom_point(aes(x=Year, y=O_Otters, color=SiteColor), size=1.2)
+popp <- popp + facet_wrap(~Site) + theme_bw(10)
+popp <- popp + scale_y_continuous(breaks=seq(0, 15, by=5))
+popp <- popp + scale_x_continuous(breaks=seq(2013, 2022, by=3))
+popp <- popp + scale_color_manual(values=sitecolors)
+popp <- popp + coord_cartesian(ylim = c(0, 15)) 
+popp <- popp + labs(x='Year', y='Otter Population')
+
+
+popp
 
 ```
 
 
+```{r pop_table}
+
+kable(b1Q[,c(4,1,2,3)], col.names=c('Site','Median Growth', '2.5%', '97.5%'),
+      caption='Estimates of the population growth parameter, in average otters per year, for each otter group as well as 95% confidence intervals for each estimate.', digits=2, align='c')
+
+ 
+```
+
+
+Of all the potentially interesting 
 
 
 ```{r random_forest}
@@ -88,12 +108,18 @@ popplot
 vars <- c('Initial Population Size', 'Change in Population size',
           'Probability of Decline')
 
+rfi <- ggplot(data=fullimp)
+rfi <- rfi + geom_point(aes(x=value, y=attribute, color=characteristic))
+rfi <- rfi + theme_bw(10) + labs(x="Relative Attribute Importance",
+                                 y="Attribute")
+rfi <- rfi + scale_color_discrete(label=vars, name='Characteristics')
 
+rfi
 
-par(mfrow=c(3,1), cex=.7, mar=c(3,2,2,1))
-for (i in 1:length(fullrf)){
-    varImpPlot(fullrf[[i]], main=vars[i])
-}
+#par(mfrow=c(3,1), cex=.7, mar=c(3,2,2,1))
+#for (i in 1:length(fullrf)){
+ #   varImpPlot(fullrf[[i]], main=vars[i])
+#}
 
 
 ```
