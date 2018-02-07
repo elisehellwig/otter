@@ -29,12 +29,24 @@ b0samples <- data.frame(sapply(1:14, function(loc) {
 names(b0samples) <- locs
 
 
-
+####################
+##preping for 
 b1samples <- data.frame(sapply(1:14, function(loc) {
     extractpar(vl2, 'u', location=loc, rows=2) + b1fixed
 }))
 names(b1samples) <- locs
 
+
+b0quants <- t(round(apply(b0samples, 2, quantile, 
+                         probs=c(0.025, .10, .25, .5, .75,.9, .975))))
+b1quants <- t(round(apply(b1samples, 2, quantile,prob=c(0.5 ,0.025, 0.975)),3))
+b1quants <- data.frame(b1quants)
+b1quants$locs <- rownames(b1quants)
+names(b1quants) <- c('estimate','lower95','upper95','loc')
+write.csv(b1quants, file.path(datapath, 'beta1quantiles.csv'),
+          row.names = FALSE)
+
+b1quants$locs <- rownames(b1quants)
 
 locpredict <- sapply(1:14, function(i) {
     locpost(vl2, i, 'u', response='function')
