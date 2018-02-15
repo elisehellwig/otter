@@ -12,10 +12,18 @@ library(rgdal)
 library(dismo)
 library(randomForest)
 library(knitr)
+library(kableExtra)
+library(rstan)
 source('../functions.R')
 #source('functions.R')
 
 datapath <- '../../otterData/'
+
+
+##################
+chars <- read.csv(file.path(datapath, 'populationcharacteristics.csv'))
+av <- read.csv(file.path(datapath, 'allvars.csv'))
+
 
 #####for big population plot
 pp <- read.csv(file.path(datapath, 'vis/popplot.csv')) 
@@ -39,6 +47,21 @@ locs <- readOGR(dsn=file.path(datapath, 'otterSPDF.GeoJSON'),
 fullrf <- readRDS(file.path(datapath, 'fullrandomForest.RDS'))
 fullimp <- readRDS(file.path(datapath, 'fullRFvariableimportance.RDS'))
 
+###Moran's I results
+mi <- read.csv(file.path(datapath, 'moranI.csv'))
+levels(mi$var) <- c('Initial Group Size', "Population Growth Rate", "Decline")
+levels(mi$spmethod) <- c('Low', "High")
+
+####glm analysis
+avm <- read.csv(file.path(datapath, 'LatitudeModelResults.csv'))
+
+Amod <- readRDS(file.path(datapath, 'models/AlphaFixedModel.RDS'))
+Bmod <- readRDS(file.path(datapath, 'models/BetaFixedModel.RDS'))
+DPmod <- readRDS(file.path(datapath, 'models/DeclinePFixedModel.RDS'))
+
+Afit <- modfit(Amod)
+Bfit <- modfit(Bmod)
+DPfit <- modfit(DPmod)
 
 #########################
 #color palettes
@@ -52,25 +75,34 @@ sitecolors <- c('#4393c3','#252525',"#ca0020")
 ## Population Analysis
 
 
-The otter total otter population consists of 14 groups, which are split up into four regions based on expert opinion. Each groups's home range is also classified as primarily estuary, lagoon, reservoir, or stream. 
+The otter total otter population consists of 14 groups, which were split up into four regions based on expert opinion. Each groups's home range was classified as primarily estuary, lagoon, reservoir, or stream. The most common transportation method used for accessing the each of the home range sites was also noted. Potential access methods included car, boat, hiking trail, and no access.
 
-The statistical analysis was conducted in two parts. First we used a Bayesian multi-lavel/mixed effects linear model to examine estimate key characteristics about the different otter groups. This includes initial group size, population growth rate and likelihood that the group is in decline. 
-The second part of the analysis focused on investigating correlations between differences in those key characteristics and the populations location attributes. The Bayesian methodology was used because it better lends itself to small data sets.
+The statistical analysis was split into two parts: a population analysis and a characteristics analysis. For the population analysis, we used a Bayesian mixed effects linear model to estimate three population characteristics for each of the otter groups: initial group size, population growth rate and likelihood that the group is in decline. The characteristics analysis focused on investigating correlations between differences in those key characteristics and other population attributes. The Bayesian methodology was used because it better lends itself to small data sets.
 
-All  statistical analyses were conducted in R, and all regression based models were constructed with the 'RStan' package (citation).
+All statistical analyses were conducted in R, and all regression based models were constructed with the 'RStan' package (citation).
 
-We fit a Bayesian multilevel linear model to the population data, using year as the predictor variable and otter group size as the response variable. Additionally, group location was included as a varying effect to control for spatial autocorrelation. This model structure made it easy to estimate both population growth rate and intial population size for each group. We calculated the likelihood of decline for each group by summing the total number of samples with the predictor variable's coefficient less than zero and dividing by the total number of samples. 
+We fit a Bayesian multilevel linear model to the population data, using year as the predictor variable and otter group size as the response variable. Additionally, group location was included as a varying effect to control for spatial autocorrelation. This model structure made it easy to estimate both population growth rate and intial population size for each group, two of the model derived characteristics of interest. We calculated likelihood of decline, the third model derived characteristic, by summing the total number of samples with the predictor variable's coefficient less than zero and dividing by the total number of samples. 
 
-Once we calculated these three characteristics for each group, we then went about investigating potential correlations between differences in the characteristics between group and differences in other group attributes Do to the large number of potential attributes relative to to the number of observations (group), Random Forest models (citation) were fit to identify the most important of these attributes in predicting differences between the group characteristic values. One randomForest model was fit for each of the three charateristics, population growth rate, initial group size and probability of decline. Then the variable importance measure identified the most important variables for predicting these model parameters.
+Once we calculated these three characteristics for each group, we then went about investigating potential correlations between differences in the characteristics between group and differences in other group attributes (Table 1). Due to the large number of potential attributes relative to to the number of observations (group), Random Forest models (citation) were fit to identify the most important of these attributes in predicting differences between the group characteristic values. One randomForest model was fit for each of the three charateristics, population growth rate, initial group size and probability of decline. Then the variable importance measure identified the most important variables for predicting these model parameters.
 
-To confirm the results of the Random Forest, we tested the dataset for indicators of autocorrelation using 'spdep' (citation). Next we fit fixed effects Bayesian generalized linear models using the most important variables to the characteristics data. We then we retested the residuals from those models to see if the issue had been controlled.
+```{r char_attribute}
 
+kable(chars[,-1], format='latex', booktabs=TRUE,
+      caption='Otter group variables of interest. ') %>%
+    kable_styling(latex_options = 'striped') %>%
+    column_spec(3, width="30em")
+
+
+```
+
+
+Due to the inherently spatial nature of the characteristics data, we tested the data for spatial autocorrelation using Moran's I before further pursuing analysis using individual population attributes. Moran's I was calculated using the 'spdep' package (citation). Both a high and low spatial connectivity structure were used to increase the robustness of the result (Figure 1). The high spatial connectivity structure is a three nearest neighbors adjacency plot and the low connectivity structure uses a 10km distance threshold. Next we fit a fixed effects Bayesian generalized linear models for each of the charateristics using the most important population attribute as a predictor. We then we retested the residuals from those models to see if the issue had been controlled.
 
 # Results
 
 ## Population Analysis
 
-Of the 14 otter groups, four of them show strong evidence of increasing population sizes: Alpine Reservoir, Giacomini Wetlands, North Tomales Bay and Peters Dam (Figure 1, Table 1). Of the remaining otter sites, have a greater than 50% likelihood that they are in decline, based on the **monte carlo** sampling. For the other seven groups, there is not enough data at this time to make any strong conclusions. 
+Of the 14 otter groups, four of them show strong evidence of increasing population sizes: Alpine Reservoir, Giacomini Wetlands, North Tomales Bay and Peters Dam (Figure 1, Table 1). Of the remaining otter sites, have a greater than 50% likelihood that they are in decline, based on the Hamiltonion Monte Carlo sampling (citation). For the other seven groups, there is not enough data at this time to make any strong conclusions. 
 
 ```{r pop_plot, warning=FALSE, fig.cap='Predicted and observed otter population sizes by site. The points indicate observed otter group sizes, while the lines indicate predicted populations.'}
 
@@ -91,6 +123,7 @@ popp
 ```
 
 
+
 ```{r pop_table}
 
 kable(b1Q[,c(4,1,2,3)], col.names=c('Site','Median Growth', '2.5%', '97.5%'),
@@ -100,18 +133,23 @@ kable(b1Q[,c(4,1,2,3)], col.names=c('Site','Median Growth', '2.5%', '97.5%'),
 ```
 
 
-Of all the potentially interesting 
+## Characteristic Analysis
 
+In the Random Forest analysis, latitude best predicted all three population characteristics. The only other predictors that did nearly as well were region, distance to San Francisco, and longitude, all of which strongly correlate with latitude in this data set (create correlation figure). Habitat performed notably poorly, along with population density, and primary access method.
 
-```{r random_forest}
+Moran's I showed evidence of spatial autocorrelation for both the high and low connectivity spatial structures (Table 3). Initial population size showed strong evidence of spatial autocorrelation using both adjacency schemes. There was a little evidence that likelihood of decline may be spatially autocorrelated as well. The population growth rate did not show evidence of spatial autocorrelation. 
 
-vars <- c('Initial Population Size', 'Change in Population size',
-          'Probability of Decline')
+Latitude predicted all three 
+
+```{r random_forest, fig.cap='Random Forest relative predictor importance for initial otter group size, population growth rate, and likelihood of decline.'}
+
+vars <- c('Initial Group Size', 'Population Growth Rate',
+          'Likelihood of Decline')
 
 rfi <- ggplot(data=fullimp)
 rfi <- rfi + geom_point(aes(x=value, y=attribute, color=characteristic))
-rfi <- rfi + theme_bw(10) + labs(x="Relative Attribute Importance",
-                                 y="Attribute")
+rfi <- rfi + theme_bw(10) + labs(x="Relative Predictor Importance",
+                                 y="Predictor")
 rfi <- rfi + scale_color_discrete(label=vars, name='Characteristics')
 
 rfi
@@ -126,11 +164,34 @@ rfi
 
 
 
+```{r moranIoriginal}
+
+orig_inds <- which(mi$res=='originalData' & mi$h1=='greater')
+
+MI_orig <- mi[orig_inds, c('var', 'spmethod', 'Moran', 'pval')]
+
+knitr::kable(MI_orig, format='latex', row.names = FALSE,
+      col.names=c('Characteristic', 'Spatial Connectivity',"Moran's I",
+                            'p-value'), digits=3, align='c',
+      caption="Values of the Moran's I statistic, a measure of spatial autocorrelation, and their associated pseudo p-values. The low connectivity adjacency scheme used a 10km distance threshold and the high connectivity scheme used the 3 nearest neighbors method.", booktabs=TRUE) %>%
+    kable_styling(full_width = FALSE)
+```
 
 
 
+```{r alpha_reg, fig.cap="Figure 4. Relationship between the latitude of the otter group location and the mean otter population in 2012. The equation in the blue is the linear regression model fitted using a Bayesian framework and is visualized by the blue line.", fig.width=5, fig.height=3}
 
 
+av_alpha <- avm[avm$response=='alpha', ]
+areg <- ggplot() + geom_point(aes(x=Latitude, y=value),
+                              data=av_alpha[av_alpha$type=='obs',])
+areg <- areg + geom_line(aes(x=Latitude, y=value), color='navy',
+                         size=0.9, data=av_alpha[av_alpha$type=='fit',])
+areg <- areg + geom_text(aes(x=38, y=3, label=formulastring(Amod)), hjust=0,
+                         size=5.5, color='navy')
+areg <- areg + labs(y='Mean Initial Population Size')
+areg
 
+```
 
 
