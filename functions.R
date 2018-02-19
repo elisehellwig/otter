@@ -276,7 +276,8 @@ modfit <- function(stanmod, betareg=FALSE) {
 } 
     
 
-formulastring <- function(mod, yvar='y', xvar='x', sf=2, greek=FALSE) {
+formulastring <- function(mod, yvar='y', xvar='x', sf=2, greek=FALSE, 
+                          beta=FALSE) {
     
     require(rstan)
     
@@ -286,14 +287,30 @@ formulastring <- function(mod, yvar='y', xvar='x', sf=2, greek=FALSE) {
     a <- round(AB[1], sf)
     b <- round(AB[2], sf)
     
-    if (greek) {
+    if (beta) {
         xvar <- paste0('(', xvar,')')
-        fmla <- paste(yvar, '==', b, xvar, '+', a)
+        bneg <- b*(-1)
+            
+        if (a<0) {
+            mufmla <- paste0(bneg, xvar, '+', abs(a))
+        } else {
+            mufmla <- paste0(bneg, xvar, '-', abs(a))
+        }
+        
+        fmla <- paste0(yvar, '==', 'frac(1, 1+e^{',
+                       mufmla, '})')
     } else {
-        fmla <- paste0(yvar, ' = ', b, xvar, ' + ', a)
+        if (greek) {
+            xvar <- paste0('(', xvar,')')
+            fmla <- paste(yvar, '==', b, xvar, '+', a)
+        } else {
+            fmla <- paste0(yvar, ' = ', b, xvar, ' + ', a)
+        }
+        
     }
     
     return(fmla)
+    
     
 }
 
@@ -311,5 +328,14 @@ BRpostlink <- function(dat, coefs, phi) {
     return(fits)
 }
 
-
+rsquared <- function(obs, fit) {
+    
+    sstot <- sum((obs-mean(obs))^2)
+    ssres <- sum((fit-obs)^2)
+    
+    r2 <- 1-(ssres/sstot)
+    
+    return(r2)
+    
+}
 
