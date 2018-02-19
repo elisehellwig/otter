@@ -7,6 +7,9 @@ otr <- read.csv(file.path(datapath, 'otterclean.csv'))
 linear <- readRDS(file.path(datapath, 'models/linear.RDS'))
 vl1 <- readRDS(file.path(datapath, 'models/varying1location.RDS'))
 vl2 <- readRDS(file.path(datapath, 'models/varying2location.RDS'))
+vlP <- readRDS(file.path(datapath, 'models/varyinglocationPOIS.RDS'))
+
+
 
 source('functions.R')
 
@@ -53,6 +56,18 @@ saveRDS(multi1, file.path(datapath, 'models/varying1locationpost.RDS'))
 multi2long <- stan(model_code=vl2, data=multilist, iter=25000, warmup=5000,
                   chains=1, control=list(adapt_delta = 0.99))
 saveRDS(multi2long, file.path(datapath, 'models/varying2locationpost.RDS'))
+
+
+multiPOIS <- stan(model_code=vlP, data=multilist, iter=25000, warmup=5000,
+                   chains=1, control=list(adapt_delta = 0.99))
+saveRDS(multiPOIS, file.path(datapath, 'models/varyinglocPOISpost.RDS'))
+
+
+#############
+
+#use loo to compare models
+
+
 
 
 ###########################################################################
