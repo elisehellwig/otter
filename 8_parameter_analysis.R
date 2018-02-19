@@ -7,6 +7,7 @@ library(parallel)
 library(betareg)
 library(plyr)
 library(reshape2)
+library(loo)
 source('functions.R')
 options(mc.cores = 3)
 
@@ -16,6 +17,10 @@ DPfx <- readRDS(file.path(datapath, 'models/DPfixedFX.RDS'))
 DPbrfx <- readRDS(file.path(datapath, 'models/DPbetaregFX.RDS'))
 Bfx <-readRDS(file.path(datapath, 'models/BETAfixedFX.RDS'))
 Afx <-readRDS(file.path(datapath, 'models/alphafixedFX.RDS'))
+BInt <-readRDS(file.path(datapath, 'models/BETAIntercept.RDS'))
+AInt <-readRDS(file.path(datapath, 'models/alphaIntercept.RDS'))
+DPInt <-readRDS(file.path(datapath, 'models/DPbetaIntercept.RDS'))
+
 
 ####################################################################
 ###################################################################
@@ -24,6 +29,8 @@ set.seed(394885)
 varinds <- c(10,18)
 varnames <- c('Latitude','region')
 respvars <- c('alpha','beta','declineP')
+varnames2 <- c('Latitude', 'Longitude','region','Access','SFOdistance',
+               'habitat', 'PopDensity')
 
 fullrf <- lapply(respvars, function(var) {
     extractrf(av, var, varinds, 'model', imp=TRUE)
@@ -74,6 +81,18 @@ saveRDS(DPbr_mod, file.path(datapath, 'models/DeclinePBetaRegModel.RDS'))
 saveRDS(DPbrpost, file.path(datapath, 'models/DeclinePBetaRegPost.RDS'))
 
 
+
+set.seed(1210331)
+Latmat <- matrix(rep(1, nrow(av)), ncol=1)
+DPbintlist <- list(N=nrow(av), K=ncol(Latmat), declineP=av$declineP, X=Latmat)
+
+DPbInt_mod <- stan(model_code = DPInt, data=DPbintlist, iter=25000, 
+                 warmup=5000, chains=1)
+saveRDS(DPbInt_mod, file.path(datapath, 
+                              'models/DeclinePBetaInterceptModel.RDS'))
+
+
+
 ##################
 set.seed(29918)
 Blist <- list(BETA=av$beta,
@@ -83,8 +102,17 @@ Blist <- list(BETA=av$beta,
 Bmod <- stan(model_code = Bfx, data=Blist, iter=25000, warmup = 5000,
               chains=1, control=list(adapt_delta = 0.9999, max_treedepth=15))
 Bpost <- rstan::extract(Bmod)
+Bloglik <- extract_log_lik(Bmod, parameter='loglik')
+
 saveRDS(Bmod, file.path(datapath, 'models/BetaFixedModel.RDS'))
 saveRDS(Bpost, file.path(datapath, 'models/BetaFixedPost.RDS'))
+
+Bint_mod <- stan(model_code = BInt, data=Blist, iter=25000, warmup = 5000,
+             chains=1, control=list(adapt_delta = 0.9999, max_treedepth=15))
+saveRDS(Bint_mod, file.path(datapath, 'models/BetaInterceptModel.RDS'))
+
+##############################################################
+##############################################################
 
 
 set.seed(493828)
@@ -94,6 +122,17 @@ Alist <- list(alpha=av$alpha,
 
 Amod <- stan(model_code = Afx, data=Alist, iter=25000, warmup = 5000,
              chains=1, control=list(adapt_delta = 0.9999, max_treedepth=15))
+
 Apost <- rstan::extract(Amod)
+Aloglik <- extract_log_lik(Amod, parameter='loglik')
+
 saveRDS(Amod, file.path(datapath, 'models/AlphaFixedModel.RDS'))
 saveRDS(Apost, file.path(datapath, 'models/AlphaFixedPost.RDS'))
+
+set.seed(892629)
+Aint_mod <- stan(model_code = AInt, data=Alist, iter=25000, warmup = 5000,
+             chains=1, control=list(adapt_delta = 0.9999, max_treedepth=15))
+saveRDS(Aint_mod, file.path(datapath, 'models/AlphaInterceptModel.RDS'))
+
+Apost <- rstan::extract(Amod)
+Aint_loglik <- extract_log_lik(Aintmod, parameter='loglik')
