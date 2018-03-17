@@ -1,3 +1,12 @@
+rmsd <- function(x, y, na.rm=FALSE) {
+
+    rmsd <- sqrt(sum((x-y)^2)/length(x)) #calculating the RMSD
+    
+    return(rmsd)
+}
+
+
+
 extractpar <- function(stanmodel, parameter, location=NA, rows=c(1,2)) {
     
     require(rstan)
@@ -200,25 +209,117 @@ extractrf <- function(x, response, predictors, element='R2', imp=FALSE) {
     return(value)
 }
 
+modfit <- function(stanmod, betareg=FALSE) {
+    abc <- get_posterior_mean(stanmod)[1:3]
+    attributes(abc) <- NULL
+    
+    
+    if (betareg) {
+        
+        fitfun <- function(x) {
+            mat <- matrix(c(rep(1, length(x)), x), ncol=2)
+            mc <- mat %*% abc[1:2]
+            mu <- inv_logit(mc)
+            
+            return(mu)
+        }
+        
+        
+    } else {
+        ab <- abc[1:2]
+        fitfun <- function(x) {
+            y <- ab[1] + ab[2]*x
+            return(y)
+        }
+    }
+    
+    return(fitfun)
+} 
+
+BRpostlink <- function(dat, coefs, phi, noPredictor=FALSE, returnMU=FALSE) {
+    
+    if (noPredictor) {
+        mc <- inv_logit(coefs)
+        
+    } else {
+        mat <- matrix(c(rep(1, length(dat)), dat), ncol=2)
+        mc <- mat %*% coefs
+    }
+    
+    mu <- inv_logit(mc)
+    
+    if (returnMU) {
+        return(mu)
+    } else {
+        A <- mu*phi
+        B <- (1-mu)*phi
+        
+        fits <- beta(A, B)
+        return(fits) 
+    }
+    
+    
+}
+
 processFixedMod <- function(model, predictor, response, pname='lat', 
-                            rname='alpha') {
+                            rname='alpha', rmse=FALSE, betareg=FALSE) {
     
-    postpars <- extract(model)
+    #print(predictor)
+    postpars <- get_posterior_mean(model)
+    postpars <- unname(postpars)
     
-    post <- sapply(1:2, function(column) postpars$beta[,column])
     
-    pars <- apply(post, 2, mean)
-    fitvals <- pars[1] + predictor*pars[2]
+    if (is.na(predictor[1])) {
+        parIDs <- 1
+        
+    } else {
+        parIDs <- 1:2
+        
+    }
+    
+    if (betareg) {
+        parIDs <- c(parIDs, max(parIDs)+1)
+    }
+    
+    pars <- postpars[parIDs]
+    
+    if (betareg & (!is.na(predictor[1]))) {
+        fitvals <- BRpostlink(predictor, pars[1:2], pars[3], returnMU = TRUE)
+        
+    } else if (betareg & is.na(predictor[1])) {
+        fits <- BRpostlink(NA, pars[1], pars[2], noPredictor = TRUE,
+                           returnMU = TRUE)
+        fitvals <- rep(fits, length(response))
+        
+    } else {
+        if (length(pars)>1) {
+            fitvals <- pars[1] + predictor*pars[2]
+        } else {
+            fitvals <- rep(pars[1], length(response))
+        }
+    }
+    
+    
+    
     resids <- response - fitvals
     
-    df <- data.frame(predictor=predictor,
-                     response=response,
-                     fit=fitvals,
-                     res=resids)
     
-    names(df) <- c(pname, rname, paste0(rname,'fit'), paste0(rname,'res'))
     
-   return(df)
+    if (rmse) {
+        error <- rmsd(fitvals, response)
+        return(error)
+        
+    } else {
+        df <- data.frame(predictor=predictor,
+                         response=response,
+                         fit=fitvals,
+                         res=resids)
+        names(df) <- c(pname, rname, paste0(rname,'fit'), paste0(rname,'res'))
+        
+        return(df)
+    }
+    
+   
     
 }
 
@@ -248,33 +349,6 @@ autocor <- function(spdata, var, sp_list, permutations, res=FALSE,
     return(value)
 }
 
-modfit <- function(stanmod, betareg=FALSE) {
-    abc <- get_posterior_mean(stanmod)[1:3]
-    attributes(abc) <- NULL
-    
-    
-    if (betareg) {
-        
-        fitfun <- function(x) {
-            mat <- matrix(c(rep(1, length(x)), x), ncol=2)
-            mc <- mat %*% abc[1:2]
-            mu <- inv_logit(mc)
-            
-            return(mu)
-        }
-        
-        
-    } else {
-        ab <- abc[1:2]
-        fitfun <- function(x) {
-            y <- ab[1] + ab[2]*x
-            return(y)
-        }
-    }
-    
-    return(fitfun)
-} 
-    
 
 formulastring <- function(mod, yvar='y', xvar='x', sf=2, greek=FALSE, 
                           beta=FALSE) {
@@ -315,18 +389,6 @@ formulastring <- function(mod, yvar='y', xvar='x', sf=2, greek=FALSE,
 }
 
 
-BRpostlink <- function(dat, coefs, phi) {
-    
-    mat <- matrix(c(rep(1, length(dat)), dat), ncol=2)
-    mc <- mat %*% coefs
-    mu <- inv_logit(mc)
-    
-    A <- mu*phi
-    B <- (1-mu)*phi
-    
-    fits <- beta(A, B)
-    return(fits)
-}
 
 rsquared <- function(obs, fit) {
     
@@ -338,4 +400,84 @@ rsquared <- function(obs, fit) {
     return(r2)
     
 }
+
+crossval <- function(stanmodel, predictor, response, data, k, 
+                     nchain=1, nwarm=5000, nsamp=25000, delt=0.999, 
+                     treedepth=15, palt = 'Latitude', noPredictor=FALSE,
+                     betareg=FALSE) {
+    
+    rmseV <- rep(NA, k)
+
+    if (is.na(palt)) {
+        palt <- predictor
+    }
+    
+    for (i in 1:k) {
+        train <- data[data$fold!=i, ]
+        test <- data[data$fold==i, ]
+        
+        if (betareg & noPredictor) {
+            Latmat <- matrix(rep(1, nrow(train)), ncol=1)
+            dlist <- list(N=nrow(train), K=ncol(Latmat),
+                          declineP=train$declineP, X=Latmat)
+            
+        } else if (betareg & (!noPredictor)) {
+            Latmat <- matrix(c(rep(1, nrow(train)), train$latitude), ncol=2)
+            dlist <- list(N=nrow(train), K=ncol(Latmat), 
+                          declineP=train$declineP, X=Latmat)
+            
+        } else {
+            dlist <- list(train[, predictor], train[,response], nrow(train))
+            names(dlist) <- c(palt, response, 'N')
+        }
+        
+        
+    
+        
+        mod <- stan(model_code = stanmodel, data=dlist, iter=nsamp,
+                          warmup = nwarm, chains=nchain,
+                          control=list(adapt_delta = delt,
+                                       max_treedepth=treedepth))
+        
+        #print(mod)
+        
+        if (noPredictor) {
+            
+            if (betareg) {
+                rmseV[i] <- processFixedMod(mod, NA, test[,response],
+                                            pname=predictor, rname=response, 
+                                            rmse=TRUE, betareg=TRUE)
+            } else {
+                rmseV[i] <- processFixedMod(mod, NA, test[,response],
+                                            pname=predictor, rname=response, 
+                                            rmse=TRUE)
+            }
+            
+            
+        } else {
+            
+            if (betareg) {
+                rmseV[i] <- processFixedMod(mod, test[, predictor], 
+                                            test[,response], pname=predictor,
+                                            rname=response, rmse=TRUE,
+                                            betareg=TRUE)
+                
+            } else {
+                rmseV[i] <- processFixedMod(mod, test[, predictor], 
+                                            test[,response], pname=predictor,
+                                            rname=response, rmse=TRUE)
+            }
+            
+        }
+        
+        
+    }
+    
+    return(mean(rmseV))
+    
+}
+
+
+
+
 
