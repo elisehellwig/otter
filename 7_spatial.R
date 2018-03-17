@@ -7,7 +7,7 @@ library(ggplot2)
 otr <- read.csv(file.path(datapath, 'otterclean.csv'))
 rv <- read.csv(file.path(datapath,'responsevars.csv'))
 sl <- read.csv(file.path(datapath, 'sitelocations.csv'))
-
+visit <- read.csv(file.path(datapath, 'annualvisits.csv'))
 
 pdens <- readOGR(dsn=file.path(datapath, 'SubCountyPopDensity'),
               layer='CA_subcountyPopDen')
@@ -17,6 +17,7 @@ pdens$logDensity <- log(pdens$PopDensity)
 
 names(sl)[1] <- 'loc'
 names(otr)[1] <- 'loc'
+names(visit) <- c('loc', 'visit')
 otrlocs <- unique(otr[, c('loc','region','habitat')])
 
 rv$metric <- rv$alpha * rv$beta
@@ -24,7 +25,7 @@ rv$ID <- 1:14
 
 x <- merge(rv, sl)
 x <- merge(x, otrlocs)
-
+x <- merge(x, visit)
 ####################################################################
 ####################################################################
 xsp <- x
