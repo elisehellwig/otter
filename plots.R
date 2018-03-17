@@ -1,4 +1,5 @@
 library(ggplot2)
+library(ggmap)
 library(rgdal)
 library(dismo)
 library(tmap)
@@ -33,32 +34,49 @@ dev.off()
 ####################################################
 # map of locations
 locs <- readOGR(dsn=file.path(datapath, 'otterSPDF.GeoJSON'),layer="OGRGeoJSON")
-
-
-data(locs)
-tm_shape(locs) + tm_shape('')
-
-data(land)
-tm_shape(land)
-
-
-qtm(shp=locs, text='loc', scale=1.5) + tm_layout(attr.just=c('left','top'))
-
-locbase <- gmap(extent(locs), type='satellite', lonlat=TRUE, scale=2)
-crs(locs) <- crs(locbase)
+names(locs)[c(1,4)] <- c("Latitude", "Region")
 
 
 tcoords <- coordinates(locs)
 tcoords[,1] <- tcoords[,1] + 0.005
 tcoords[1,2] <- tcoords[1,2]-0.005
 
+ldf <- locs@data
+levels(ldf$Region) <- c('Bay','Coast','Inland','Point Reyes')
+levels(ldf$loc) <-lvlNames
+ldf$labelX <- tcoords[,1]
+ldf$labelY <- tcoords[,2]
 
-png(file.path(datapath, 'plots/locations.png'), width=3000, height=3000, 
+
+
+
+
+ext <- extent(locs)
+bbgg <- c(left=xmin(ext), bottom=ymin(ext), right=xmax(ext), top=ymax(ext))
+locbasegg <- get_map(location=bbgg, maptype = 'satellite', zoom=10)
+
+la <- ggmap(locbasegg, extent='device', legend = "topright") + 
+    geom_point(aes(x=Longitude, y=Latitude, color=Region), size=10, data=ldf) + 
+    geom_text(aes(x=labelX, y=labelY, label=loc), 
+              data=ldf, color='white', hjust=0, size=10, nudge_x = 0.005) +
+    theme(legend.text=element_text(size=30), 
+          legend.title = element_text(size=35, face='bold'),
+          legend.key.height = unit(2, 'cm'))
+
+png(file.path(datapath, 'plots/locations2.png'), width=2500, height=2500, 
     res=150)
-    plot(locbase)
-    plot(locs, pch=19, cex=3, col='maroon3', add=TRUE)
-    text(tcoords[,1], tcoords[,2], labels=locs$loc, pos=4, col='white', cex=3)
+    la
 dev.off()
+
+
+
+
+# png(file.path(datapath, 'plots/locations.png'), width=3000, height=3000, 
+#     res=150)
+#     plot(locbase)
+#     plot(locs, pch=19, cex=3, col='maroon3', add=TRUE)
+#     text(tcoords[,1], tcoords[,2], labels=locs$loc, pos=4, col='white', cex=3)
+# dev.off()
 
 ####################################################
 ####################################################
