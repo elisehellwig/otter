@@ -32,8 +32,8 @@ xsp <- x
 coordinates(xsp) <-~ Longitude + Latitude
 crs(xsp) <- crs(pdens)
 
-pdenspoints <- extract(pdens, xsp)[,c(1,4,6)]
-names(pdenspoints)[1] <- "ID"
+pdenspoints <- over(xsp,pdens)[,c(2,4)]
+pdenspoints$ID <- 1:14
 
 xsp <- merge(xsp, pdenspoints)
 
