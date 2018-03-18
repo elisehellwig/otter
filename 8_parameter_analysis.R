@@ -25,12 +25,16 @@ DPInt <-readRDS(file.path(datapath, 'models/DPbetaIntercept.RDS'))
 ####################################################################
 ###################################################################
 
+
 set.seed(394885)
-varinds <- c(10,18)
+varinds <- c(10,19)
 varnames <- c('Latitude','region')
 respvars <- c('alpha','beta','declineP')
 varnames2 <- c('Latitude', 'Longitude','region','Access','SFOdistance',
                'habitat', 'PopDensity')
+predvars <- c('Access','Distance to SFO', 'Time to SFO', 'Region',
+              'Primary Habitat','Annual Visitors','Population Density',
+              'Log Population Density','Longitude','Latitude')
 
 fullrf <- lapply(respvars, function(var) {
     extractrf(av, var, varinds, 'model', imp=TRUE)
@@ -44,7 +48,10 @@ fullimp <- sapply(fullrf, function(i) as.numeric(importance(i, type=2)))
 fullimp <- as.data.frame(apply(fullimp, 2, scale, center=FALSE))
 
 names(fullimp) <- respvars
+rownames(fullimp) <- 
 fullimp$attribute <- rownames(importance(fullrf[[1]]))
+fullimp$attribute <- predvars
+
 fullimpm <- melt(fullimp, id.var='attribute', variable.name = 'characteristic')
 saveRDS(fullimpm, file.path(datapath, 'fullRFvariableimportance.RDS'))
 
