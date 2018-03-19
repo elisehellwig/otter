@@ -85,6 +85,8 @@ locs <- readOGR(dsn=file.path(datapath, 'otterSPDF.GeoJSON'),
 fullrf <- readRDS(file.path(datapath, 'fullrandomForest.RDS'))
 fullimp <- readRDS(file.path(datapath, 'fullRFvariableimportance.RDS'))
 
+
+
 ###Moran's I results
 mi <- read.csv(file.path(datapath, 'moranI.csv'))
 levels(mi$var) <- c('Initial Group Size', "Population Growth Rate", "Decline")
@@ -213,7 +215,7 @@ popp
 
 ## Characteristic Analysis
 
-In the Random Forest analysis, latitude best predicted all three population characteristics (Figure 2). The only other predictors that performed nearly as well were region, distance to San Francisco, and longitude, all of which strongly correlate with latitude in this data set. Habitat performed notably poorly, along with population density, and primary access method.
+In the Random Forest analysis, latitude best predicted all three population characteristics (Figure 2). The most of the other predictors that performed nearly as well strongly correlate with latitude in this data set (region, distance to San Francisco, and longitude). Annual visitors was about as predictive as region. Just like region though, it did not add useful information when included in a generalized linear model. Habitat performed notably poorly, along with population density, and primary access method.
 
 Moran's I showed evidence of spatial autocorrelation for both the high and low connectivity spatial structures (Table 3). Initial population size showed strong evidence of spatial autocorrelation using both adjacency schemes. There was a little evidence that likelihood of decline may be spatially autocorrelated as well. The population growth rate did not show evidence of spatial autocorrelation. 
 
