@@ -32,9 +32,8 @@ varnames <- c('Latitude','region')
 respvars <- c('alpha','beta','declineP')
 varnames2 <- c('Latitude', 'Longitude','region','Access','SFOdistance',
                'habitat', 'PopDensity')
-predvars <- c('Access','Distance to SFO', 'Time to SFO', 'Region',
-              'Primary Habitat','Annual Visitors','Population Density',
-              'Log Population Density','Longitude','Latitude')
+predvars <- c('Access','Distance', 'Time', 'Region', 'Habitat','Visitors',
+              'Density', 'LogDensity','Longitude','Latitude')
 
 fullrf <- lapply(respvars, function(var) {
     extractrf(av, var, varinds, 'model', imp=TRUE)
