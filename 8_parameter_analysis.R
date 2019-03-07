@@ -17,6 +17,8 @@ DPfx <- readRDS(file.path(datapath, 'models/DPfixedFX.RDS'))
 DPbrfx <- readRDS(file.path(datapath, 'models/DPbetaregFX.RDS'))
 Bfx <-readRDS(file.path(datapath, 'models/BETAfixedFX.RDS'))
 Afx <-readRDS(file.path(datapath, 'models/alphafixedFX.RDS'))
+Apois <-readRDS(file.path(datapath, 'models/ApoisFX.RDS'))
+
 BInt <-readRDS(file.path(datapath, 'models/BETAIntercept.RDS'))
 AInt <-readRDS(file.path(datapath, 'models/alphaIntercept.RDS'))
 DPInt <-readRDS(file.path(datapath, 'models/DPbetaIntercept.RDS'))
@@ -43,16 +45,20 @@ selectedrf <- lapply(respvars, function(var) {
     })
 
 saveRDS(fullrf, file.path(datapath, 'fullrandomForest.RDS'))
-fullimp <- sapply(fullrf, function(i) as.numeric(importance(i, type=1)))
-fullimp <- as.data.frame(apply(fullimp, 2, scale, center=FALSE))
+fullimp <- as.data.frame(sapply(fullrf, function(i) {
+    as.numeric(importance(i, type=1))}))
+
+#fullimp <- as.data.frame(apply(fullimp, 2, scale, center=FALSE))
 
 names(fullimp) <- respvars
-rownames(fullimp) <- 
+rownames(fullimp) <- NULL
 fullimp$attribute <- rownames(importance(fullrf[[1]]))
 fullimp$attribute <- predvars
 
 fullimpm <- melt(fullimp, id.var='attribute', variable.name = 'characteristic')
 saveRDS(fullimpm, file.path(datapath, 'fullRFvariableimportance.RDS'))
+write.csv(fullimp, file.path(datapath, 'fullRFimportanceTable.csv'),
+          row.names = FALSE)
 
 saveRDS(selectedrf, file.path(datapath, 'selectrandomForest.RDS'))
 
@@ -125,6 +131,9 @@ set.seed(493828)
 Alist <- list(alpha=av$alpha,
               Latitude=av$latitude,
               N=nrow(av))
+
+Amod <- stan(model_code = Apois, data=Alist, iter=5000, warmup = 1000,
+             chains=1, control=list(adapt_delta = 0.99, max_treedepth=15))
 
 Amod <- stan(model_code = Afx, data=Alist, iter=25000, warmup = 5000,
              chains=1, control=list(adapt_delta = 0.9999, max_treedepth=15))
