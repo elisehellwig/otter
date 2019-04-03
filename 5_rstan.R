@@ -1,7 +1,9 @@
 datapath <- '/Users/echellwig/Drive/OtherPeople/otterData'
-options(stringsAsFactors = FALSE)
-options(mc.cores = parallel::detectCores())
 library(rstan)
+
+options(stringsAsFactors = FALSE, 
+        mc.cores = parallel::detectCores())
+rstan_options(auto_write = TRUE)
 
 otr <- read.csv(file.path(datapath, 'otterclean.csv'))
 linear <- readRDS(file.path(datapath, 'models/linear.RDS'))
