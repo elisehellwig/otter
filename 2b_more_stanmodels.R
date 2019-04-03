@@ -109,6 +109,67 @@ generated quantities {
 '
 saveRDS(alphafixed, file.path(datapath, 'models/alphafixedFX.RDS'))
 
+Apois <- '
+data{
+    int<lower=1> N; //number of data points
+    int<lower=0> alpha[N]; //dependent variable, initial population
+    real Latitude[N]; //independent variable
+}
+parameters{ 
+    vector[2] beta;
+}  
+model {
+
+    real mu[N];
+    real lambda[N];
+    for (i in 1:N) {
+        mu[i] = beta[1] + beta[2]*Latitude[i];
+        lambda[i] = exp(mu[i]);
+    }
+
+    //priors
+    beta ~ normal(0,1);
+
+    //likelihood
+    alpha ~ poisson(lambda);
+}
+'
+saveRDS(Apois, file.path(datapath, 'models/ApoisFX.RDS'))
+
+
+ApoisIntercept <- '
+data{
+    int<lower=1> N; //number of data points
+    real<lower=0>[N] alpha; //dependent variable, initial population
+}
+parameters{ 
+    vector beta;
+}  
+transformed parameters{
+    //linear predictor
+    real mu[N]; 
+
+    //transformed predictor
+    real <lower 0> lambda[N];
+}
+model {
+
+for (i in 1:N) {
+mu[i] = beta[1] + beta[2]*Latitude[i];
+lambda[i] = exp(mu[i])
+}
+
+//priors
+beta ~ normal(0,1);
+
+    //likelihood
+    alpha ~ poisson(lambda);
+}
+'
+saveRDS(Apois, file.path(datapath, 'models/ApoisFX.RDS'))
+
+
+
 
 alphafixedintercept <- '
 data{
