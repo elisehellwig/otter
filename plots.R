@@ -13,6 +13,9 @@ lvlNames <- c('Abbotts Lagoon', 'Alpine Reservoir', 'Bass Lake','Bolinas',
               'Madera Creek', 'Muir Woods','North Tomales Bay','Peters Dam',
               'Rodeo Lagoon','Tennessee Valley')
 levels(pp$Site) <- lvlNames
+
+charcolors <- c('#1b9e77', '#d95f02', '#7570b3')
+
 ####################################################
 
 popplot <- ggplot(data=pp) + geom_line(aes(x=Year, y=P_Otters), size=1.2)
@@ -103,6 +106,25 @@ for (i in 1:length(selrf)){
     varImpPlot(selrf[[i]], main=vars[i])
 }
 dev.off()
+
+
+# Full Variable Importance ------------------------------------------------
+rfimp <- readRDS(file.path(datapath, 'fullRFvariableimportance.RDS'))
+
+impplot <- ggplot(data=rfimp) + 
+    geom_point(aes(x=value, y=attribute, color=characteristic), size=2) +
+    labs(x='Variable Importance', y='Predictor') + 
+    scale_color_manual(values=charcolors, name='Characteristics',
+                       labels=c('Initial Group Size','Population Growth Rate',
+                                'Likelihood of Decline')) +
+    
+    theme_bw()
+    
+png(file.path(datapath, 'plots/VariableImportance.png'), width=1800, 
+    height=900, res=300)
+    impplot
+dev.off()
+
 
 ####################################################
 ####################################################
