@@ -122,7 +122,7 @@ model {
     }
 }
 '
-saveRDS(otrlmm, file.path(datapath, 'models/varying2location.RDS'))
+saveRDS(otrlmm2, file.path(datapath, 'models/varying2location.RDS'))
 
 ##generalized linear mixed model with poisson likelihood
 
