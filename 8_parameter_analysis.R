@@ -30,7 +30,7 @@ DPInt <-readRDS(file.path(datapath, 'models/DPbetaIntercept.RDS'))
 
 set.seed(394885)
 varinds <- c(10,19)
-varnames <- c('Latitude','region')
+varnames <- c('Latitude','visit')
 respvars <- c('alpha','beta','declineP')
 varnames2 <- c('Latitude', 'Longitude','region','Access','SFOdistance',
                'habitat', 'PopDensity')
@@ -46,7 +46,7 @@ selectedrf <- lapply(respvars, function(var) {
 
 saveRDS(fullrf, file.path(datapath, 'fullrandomForest.RDS'))
 fullimp <- as.data.frame(sapply(fullrf, function(i) {
-    as.numeric(importance(i, type=1))}))
+    signif(as.numeric(importance(i, type=1)),2)}))
 
 #fullimp <- as.data.frame(apply(fullimp, 2, scale, center=FALSE))
 
@@ -57,6 +57,8 @@ fullimp$attribute <- predvars
 
 fullimpm <- melt(fullimp, id.var='attribute', variable.name = 'characteristic')
 saveRDS(fullimpm, file.path(datapath, 'fullRFvariableimportance.RDS'))
+
+
 write.csv(fullimp, file.path(datapath, 'fullRFimportanceTable.csv'),
           row.names = FALSE)
 
@@ -150,4 +152,4 @@ Aint_mod <- stan(model_code = AInt, data=Alist, iter=25000, warmup = 5000,
 saveRDS(Aint_mod, file.path(datapath, 'models/AlphaInterceptModel.RDS'))
 
 Apost <- rstan::extract(Amod)
-Aint_loglik <- extract_log_lik(Aintmod, parameter='loglik')
+Aint_loglik <- extract_log_lik(Aint_mod, parameter='loglik')
