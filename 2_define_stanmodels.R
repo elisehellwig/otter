@@ -1,5 +1,5 @@
 library(rstan)
-datapath <- '/Users/echellwig/Drive/OtherPeople/otterData'
+datapath <- '/Users/echellwig/Google Drive/OtherPeople/otterData/'
 
 ##Ordinary linear regression with no grouping
 
