@@ -8,6 +8,11 @@ otr$cpop <- scale(otr$pop)
 attributes(otr$cpop) <- NULL
 
 #########################################################
+la <- lapply(unique(otr$location), function(loc) {
+    lm(pop ~ year, data=otr[otr$location==loc, ])
+})
+
+pop2 <- pop
 
 mod1 <- quap(
     alist(pop ~ dnorm(mu, sigma),
