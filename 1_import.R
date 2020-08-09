@@ -1,35 +1,34 @@
-datapath <- '/Users/echellwig/Drive/OtherPeople/otterData'
-library(reshape2)
+datapath <- '/Users/echellwig/Google Drive/OtherPeople/otterData/'
+library(data.table)
 
 options(stringsAsFactors = FALSE)
 
-locs <- read.csv(file.path(datapath, 'otterlocs.csv'))
-ott <- read.csv(file.path(datapath, 'otterpopAll.csv'))
-pup <- read.csv(file.path(datapath, 'otterpopPups.csv'))
+locs <- fread(file.path(datapath, 'otterlocs.csv'))
+ott <- fread(file.path(datapath, 'OtterPopulation2019.csv'), header=TRUE)
 
-
-areaNames <- c('Abbotts', "NTB", "Giacomini", 'Rodeo', "Muir",'Madera',
-               'Tennessee', "Bolinas",'Drakes','Bass','Alpine','Peters',
+areaNames <- c('Abbotts', "NTB", "Giacomini", 'Rodeo', "Muir",'Greenbrae',
+               'Tennessee', "Bolinas",'Drakes','Bass', 'Reservoir','Lagunitas',
                'LasGallinas','Estero')
 
 #####################################################
 
-ott$Area <- areaNames
-names(ott)[1] <- 'location'
+ott[,":="(location=areaNames, FSS=NULL)]
 
 ott_all <- merge(ott, locs, by='location')
 
 ottm <- melt(ott_all, id.vars = c('location','region','habitat'), 
-             variable.name = 'year', value.name = 'pop')
+             variable.name = 'year', value.name = 'pop', variable.factor = FALSE)
 
-ottm$year <- as.integer(sub("X", "", ottm$year))
+ottm[,":="(year=as.numeric(year))]
 
-NApops <- which(is.na(ottm$pop))
-ottr <- ottm[-NApops,]
+ottmNApops <- which(is.na(ottm$pop))
+ottr <- ottm[!is.na(pop)]
 
 ottr$year <- ottr$year-2012
 
-write.csv(ottr, file.path(datapath, 'otterclean.csv'), row.names = FALSE)
+ottr <- ottr[!location %in% c('Greenbrae', 'Bolinas')]
+
+write.csv(ottr, file.path(datapath, 'otterclean2019.csv'), row.names = FALSE)
 
 
 
