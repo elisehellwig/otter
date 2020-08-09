@@ -1,9 +1,11 @@
-datapath <- '/Users/echellwig/Drive/OtherPeople/otterData'
+datapath <- '/Users/echellwig/Google Drive/OtherPeople/otterData/'
 options(stringsAsFactors = FALSE)
 options(mc.cores = parallel::detectCores())
 library(rstan)
 
-otr <- read.csv(file.path(datapath, 'otterclean.csv'))
+rstan_options(auto_write = TRUE)
+
+otr <- read.csv(file.path(datapath, 'otterclean2019.csv'))
 linear <- readRDS(file.path(datapath, 'models/linear.RDS'))
 vl1 <- readRDS(file.path(datapath, 'models/varying1location.RDS'))
 vl2 <- readRDS(file.path(datapath, 'models/varying2location.RDS'))

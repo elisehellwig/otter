@@ -43,8 +43,8 @@ selectedrf <- lapply(respvars, function(var) {
     })
 
 saveRDS(fullrf, file.path(datapath, 'fullrandomForest.RDS'))
-fullimp <- sapply(fullrf, function(i) as.numeric(importance(i, type=2)))
-fullimp <- as.data.frame(apply(fullimp, 2, scale, center=FALSE))
+fullimp <- sapply(fullrf, function(i) as.numeric(importance(i, type=1)))
+fullimp <- as.data.frame(apply(fullimp2, 2, scale, center=FALSE))
 
 names(fullimp) <- respvars
 rownames(fullimp) <- 
