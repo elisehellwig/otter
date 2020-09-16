@@ -1,11 +1,12 @@
-datapath <- '/Users/echellwig/Drive/OtherPeople/otterData'
+datapath <- '/Users/echellwig/Google Drive/OtherPeople/otterData/'
 options(stringsAsFactors = FALSE)
 library(rstan)
 library(ggplot2)
 library(rethinking)
-otr <- read.csv(file.path(datapath, 'otterclean.csv'))
+otr <- read.csv(file.path(datapath, 'otterclean2019.csv'))
 vl1 <- readRDS(file.path(datapath, 'models/varying1locationpost.RDS'))
 vl2 <- readRDS(file.path(datapath, 'models/varying2locationpost.RDS'))
+vlP <- readRDS(file.path(datapath, 'models/varyinglocationPOIS.RDS'))
 
 
 source('functions.R')
@@ -23,7 +24,7 @@ names(otr2) <- c('Site','YearID','O_Otters')
 b0fixed <- extractpar(vl2, 'beta', location=NA, rows=1)
 b1fixed <- extractpar(vl2, 'beta', location=NA, rows=2)
 
-b0samples <- data.frame(sapply(1:14, function(loc) {
+b0samples <- data.frame(sapply(1:length(locs), function(loc) {
     extractpar(vl2, 'u', location=loc, rows=1) + b0fixed
 }))
 names(b0samples) <- locs
@@ -31,7 +32,7 @@ names(b0samples) <- locs
 
 ####################
 ##preping for 
-b1samples <- data.frame(sapply(1:14, function(loc) {
+b1samples <- data.frame(sapply(1:length(locs), function(loc) {
     extractpar(vl2, 'u', location=loc, rows=2) + b1fixed
 }))
 names(b1samples) <- locs
@@ -48,14 +49,14 @@ write.csv(b1quants, file.path(datapath, 'beta1quantiles.csv'),
 
 b1quants$locs <- rownames(b1quants)
 
-locpredict <- sapply(1:14, function(i) {
+locpredict <- sapply(1:length(locs), function(i) {
     locpost(vl2, i, 'u', response='function')
 })
 
 
 
-yrs <- 0:10
-df <- expand.grid(1:14, yrs)
+yrs <- 0:15
+df <- expand.grid(1:length(locs), yrs)
 attributes(df)$out.attrs <- NULL
 df$pop <- predictpop(df, locpredict, median)
 allpredictions <- predictpop(df, locpredict, same)
@@ -69,8 +70,8 @@ names(dfci) <- c('ID','YearID','P_Otters','Lower95','Upper95','Site')
 dfci$Year <- dfci$YearID + 2012
 dfm <- merge(dfci, otr2, all.x = TRUE)
 
-dpSites <- c('Muir','Bolinas','Tennessee')
-posSites <- c('Alpine','Giacomini','NTB','Peters')
+dpSites <- c()
+posSites <- c('NTB')
 dfm$SiteColor <- ifelse(dfm$Site %in% posSites, "Pos", "None")
 dfm[dfm$Site %in% dpSites, 'SiteColor'] <- 'Neg'
 
@@ -87,7 +88,7 @@ extinctp10 <- sapply(locpredict, function(lfun) {
 
 
 pdat <- data.frame(loc=locs,
-                   declineP=sapply(1:14, function(i) {
+                   declineP=sapply(1:length(locs), function(i) {
                        mean(b1samples[,i]<0)
                    }),
                    extinct10=extinctp10,
