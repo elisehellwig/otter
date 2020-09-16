@@ -86,11 +86,48 @@ model {
 '
 saveRDS(otrlmm, file.path(datapath, 'models/varying1location.RDS'))
 
-
-
-
-### varying FX for intercept and slope on location
+#this one has divergent transitions after warmup
 otrlmm2 <- '
+data{
+    int<lower=1> N; //number of data points
+    int P; //number of locations
+    int K; //predictors + intercept
+    int <lower=1, upper=P> loc[N]; //location id
+    matrix[N, K] x; //matrix of predictors
+    real pop[N]; //dependent variable, otter population
+
+}
+parameters{
+    vector[K] beta; //fixed effects slope and intercepts
+    vector[K] beta_p[N]; // varying intercept and slope coefficients
+    real <lower=0> sigma; //population sigma
+    vector<lower=0>[K] sigma_p; // sd for varying intercept and slope
+    corr_matrix[K] Omega; //correlation matrix
+}  
+model {
+    vector[N] mu;
+
+    //priors
+    beta ~ normal(0, 0.5);
+    sigma ~ exponential(1);
+    sigma_p ~ exponential(1);
+    beta_p ~ multi_normal(beta, quad_form_diag(Omega, sigma_p));
+
+    //likelihood
+    for (i in 1:N) {
+        mu[i] = x[i] * (beta_p[loc[i]]);
+    }
+    
+    pop ~ normal(mu, sigma);
+}
+'
+saveRDS(otrlmm2, file.path(datapath, 'models/varying2location.RDS'))
+
+
+
+
+### varying FX for intercept and slope on location + cholesky
+otrlmm2scholestky <- '
 data{
     int<lower=1> N; //number of data points
     int P; //number of locations
@@ -122,7 +159,8 @@ model {
     }
 }
 '
-saveRDS(otrlmm2, file.path(datapath, 'models/varying2location.RDS'))
+saveRDS(otrlmm2scholestky, 
+        file.path(datapath, 'models/varying2locationcholestky.RDS'))
 
 ##generalized linear mixed model with poisson likelihood
 
