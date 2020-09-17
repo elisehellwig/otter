@@ -1,3 +1,12 @@
+
+# Update This -------------------------------------------------------------
+
+year <- 2019
+
+
+# Setup -------------------------------------------------------------------
+
+
 datapath <- '/Users/echellwig/Google Drive/OtherPeople/otterData/'
 options(stringsAsFactors = FALSE)
 options(mc.cores = parallel::detectCores())
@@ -5,11 +14,15 @@ library(rstan)
 
 rstan_options(auto_write = TRUE)
 
-otr <- read.csv(file.path(datapath, 'otterclean2019.csv'))
-linear <- readRDS(file.path(datapath, 'models/linear.RDS'))
-vl1 <- readRDS(file.path(datapath, 'models/varying1location.RDS'))
-vl2 <- readRDS(file.path(datapath, 'models/varying2locationcholestky.RDS'))
-vlP <- readRDS(file.path(datapath, 'models/varyinglocationPOIS.RDS'))
+
+# Read In -----------------------------------------------------------------
+
+
+otr <- read.csv(file.path(datapath, 'clean', paste0('otterclean', year, 'csv')))
+linear <- readRDS(file.path(datapath, 'models/cpp/linear.RDS'))
+vl1 <- readRDS(file.path(datapath, 'models/cpp/varying1location.RDS'))
+vl2 <- readRDS(file.path(datapath, 'models/cpp/varying2location.RDS'))
+vlP <- readRDS(file.path(datapath, 'models/cpp/varyinglocationPOIS.RDS'))
 
 
 
@@ -21,8 +34,6 @@ source('functions.R')
 #note if a prior is not specified it is uniform.
 ##########################################################
 
-locfac <- factor(otr$location)
-
 #data for lm stan model
 fixedlist <- list(pop=otr$pop,
                   year=otr$year,
@@ -31,10 +42,8 @@ fixedlist <- list(pop=otr$pop,
 multilist <- list(pop=otr$pop,
                   year=otr$year,
                   N=nrow(otr),
-                  K=2,
-                  x=matrix(c(rep(1, nrow(otr)), otr$year), ncol=2),
-                  P=nlevels(locfac),
-                  loc=as.integer(locfac))
+                  P=length(unique(otr$siteID)),
+                  loc=otr$siteID)
 
 
 
