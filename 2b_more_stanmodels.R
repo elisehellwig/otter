@@ -1,6 +1,6 @@
 
 library(rstan)
-datapath <- '/Users/echellwig/Drive/OtherPeople/otterData'
+datapath <- '/Users/echellwig/Google Drive/OtherPeople/otterData/models/cpp'
 
 
 DPfixed <- '
@@ -23,7 +23,7 @@ model {
     }
 }
 '
-saveRDS(DPfixed, file.path(datapath, 'models/DPfixedFX.RDS'))
+saveRDS(DPfixed, file.path(datapath, 'DPfixedFX.RDS'))
 
 BETAfixedintercept <- '
 data{
@@ -49,7 +49,7 @@ generated quantities {
     }
 }
 '
-saveRDS(BETAfixedintercept, file.path(datapath, 'models/BETAIntercept.RDS'))
+saveRDS(BETAfixedintercept, file.path(datapath, 'BETAIntercept.RDS'))
 
 
 BETAfixed <- '
@@ -78,7 +78,7 @@ generated quantities {
     }
 }
 '
-saveRDS(BETAfixed, file.path(datapath, 'models/BETAfixedFX.RDS'))
+saveRDS(BETAfixed, file.path(datapath, 'BETAfixedFX.RDS'))
 
 
 alphafixed <- '
@@ -107,7 +107,7 @@ generated quantities {
     }
 }
 '
-saveRDS(alphafixed, file.path(datapath, 'models/alphafixedFX.RDS'))
+saveRDS(alphafixed, file.path(datapath, 'alphafixedFX.RDS'))
 
 Apois <- '
 data{
@@ -134,7 +134,7 @@ model {
     alpha ~ poisson(lambda);
 }
 '
-saveRDS(Apois, file.path(datapath, 'models/ApoisFX.RDS'))
+saveRDS(Apois, file.path(datapath, 'ApoisFX.RDS'))
 
 
 ApoisIntercept <- '
@@ -166,7 +166,7 @@ beta ~ normal(0,1);
     alpha ~ poisson(lambda);
 }
 '
-saveRDS(Apois, file.path(datapath, 'models/ApoisFX.RDS'))
+saveRDS(Apois, file.path(datapath, 'ApoisFX.RDS'))
 
 
 
@@ -195,7 +195,7 @@ generated quantities {
     }
 }
 '
-saveRDS(alphafixedintercept, file.path(datapath, 'models/alphaIntercept.RDS'))
+saveRDS(alphafixedintercept, file.path(datapath, 'alphaIntercept.RDS'))
 
 
 DPbetareg <- '
@@ -252,7 +252,7 @@ generated quantities {
     }
 }
 '
-saveRDS(DPbetareg, file.path(datapath, 'models/DPbetaregFX.RDS'))
+saveRDS(DPbetareg, file.path(datapath, 'DPbetaregFX.RDS'))
 
 
 DPbetaInt <- '
@@ -310,6 +310,6 @@ generated quantities {
     }
 }
 '
-saveRDS(DPbetaInt, file.path(datapath, 'models/DPbetaIntercept.RDS'))
+saveRDS(DPbetaInt, file.path(datapath, 'DPbetaIntercept.RDS'))
 
 

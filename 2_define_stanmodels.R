@@ -1,5 +1,5 @@
 library(rstan)
-datapath <- '/Users/echellwig/Google Drive/OtherPeople/otterData/'
+datapath <- '/Users/echellwig/Google Drive/OtherPeople/otterData/models/cpp'
 
 ##Ordinary linear regression with no grouping
 
@@ -21,7 +21,7 @@ model {
     }
 }
 '
-saveRDS(linear, file.path(datapath, 'models/linear.RDS'))
+saveRDS(linear, file.path(datapath, 'linear.RDS'))
 
 
 
@@ -84,7 +84,7 @@ model {
     }
 }
 '
-saveRDS(otrlmm, file.path(datapath, 'models/varying1location.RDS'))
+saveRDS(otrlmm, file.path(datapath, 'varying1location.RDS'))
 
 #this one has divergent transitions after warmup
 otrlmm2 <- '
@@ -121,13 +121,13 @@ model {
     pop ~ normal(mu, sigma);
 }
 '
-saveRDS(otrlmm2, file.path(datapath, 'models/varying2location.RDS'))
+#saveRDS(otrlmm2, file.path(datapath, 'varying2location.RDS'))
 
 
 
 
 ### varying FX for intercept and slope on location + cholesky
-otrlmm2scholestky <- '
+otrlmm2schol <- '
 data{
     int<lower=1> N; //number of data points
     int P; //number of locations
@@ -159,8 +159,7 @@ model {
     }
 }
 '
-saveRDS(otrlmm2scholestky, 
-        file.path(datapath, 'models/varying2locationcholestky.RDS'))
+saveRDS(otrlmm2schol, file.path(datapath, 'varying2location.RDS'))
 
 ##generalized linear mixed model with poisson likelihood
 
@@ -198,7 +197,7 @@ model {
     }
 }
 '
-saveRDS(otrGlmm, file.path(datapath, 'models/varyinglocationPOIS.RDS'))
+saveRDS(otrGlmm, file.path(datapath, 'varyinglocationPOIS.RDS'))
 
 
 
