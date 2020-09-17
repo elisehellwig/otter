@@ -43,7 +43,7 @@ ottr <- ottr[!siteID %in% c(6,8)]
 
 # Save --------------------------------------------------------------------
 
-fwrite(ottr, file.path(datapath, 'clean/otterclean2019.csv'))
+fwrite(ottr, file.path(datapath, 'clean', paste0('otterclean', year, '.csv')))
 
 
 # 
