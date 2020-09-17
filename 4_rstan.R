@@ -7,22 +7,24 @@ year <- 2019
 # Setup -------------------------------------------------------------------
 
 
-datapath <- '/Users/echellwig/Google Drive/OtherPeople/otterData/'
+datapath <- '/Users/echellwig/Google Drive/OtherPeople/otterData'
 options(stringsAsFactors = FALSE)
 options(mc.cores = parallel::detectCores())
 library(rstan)
 
 rstan_options(auto_write = TRUE)
 
+stanpath <- file.path(datapath, 'models/cpp')
+outpath <- file.path(datapath, 'models', year)
+
 
 # Read In -----------------------------------------------------------------
 
-
 otr <- read.csv(file.path(datapath, 'clean', paste0('otterclean', year, 'csv')))
-linear <- readRDS(file.path(datapath, 'models/cpp/linear.RDS'))
-vl1 <- readRDS(file.path(datapath, 'models/cpp/varying1location.RDS'))
-vl2 <- readRDS(file.path(datapath, 'models/cpp/varying2location.RDS'))
-vlP <- readRDS(file.path(datapath, 'models/cpp/varyinglocationPOIS.RDS'))
+linear <- readRDS(file.path(stanpath, 'linear.RDS'))
+vl1 <- readRDS(file.path(stanpath, 'varying1location.RDS'))
+vl2 <- readRDS(file.path(stanpath, 'varying2location.RDS'))
+vlP <- readRDS(file.path(stanpath, 'varyinglocationPOIS.RDS'))
 
 
 
@@ -54,7 +56,7 @@ multilist <- list(pop=otr$pop,
 #fixed FX model
 fixedl <- stan(model_code=linear, data=fixedlist, iter=20000, warmup = 5000,
                chains=1)
-saveRDS(fixedl, file.path(datapath, 'models/fixedpost.RDS'))
+saveRDS(fixedl, file.path(outpath, 'fixedpost.RDS'))
 
 
 
@@ -64,7 +66,7 @@ saveRDS(fixedl, file.path(datapath, 'models/fixedpost.RDS'))
 multi1 <- stan(model_code=vl1, data=multilist, iter=25000, warmup=5000,
                chains=1, control=list(adapt_delta = 0.99))
 
-saveRDS(multi1, file.path(datapath, 'models/varying1locationpost.RDS'))
+saveRDS(multi1, file.path(outpath, 'varying1locationpost.RDS'))
 
 #varying effects on intercepts + slopes
 multi2 <- stan(model_code=vl2, data=multilist, iter=10000, warmup=1000,
@@ -80,13 +82,13 @@ multiP <- stan(model_code=vlP, data=multilist, iter=10000, warmup=1000,
 #mixed effects model
 multi2long <- stan(model_code=vl2, data=multilist, iter=25000, warmup=5000,
                   chains=1, control=list(adapt_delta = 0.99))
-saveRDS(multi2long, file.path(datapath, 'models/varying2locationpost.RDS'))
+saveRDS(multi2long, file.path(outpath, 'varying2locationpost.RDS'))
 
 
 #mixed effects glm
 multiPlong <- stan(model_code=vlP, data=multilist, iter=25000, 
                    warmup=5000, chains=1, control=list(adapt_delta = 0.99))
-saveRDS(multiPlong, file.path(datapath, 'models/varyinglocPOISpost.RDS'))
+saveRDS(multiPlong, file.path(outpath, 'varyinglocPOISpost.RDS'))
 
 
 
