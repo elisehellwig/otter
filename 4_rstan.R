@@ -8,7 +8,7 @@ rstan_options(auto_write = TRUE)
 otr <- read.csv(file.path(datapath, 'otterclean2019.csv'))
 linear <- readRDS(file.path(datapath, 'models/linear.RDS'))
 vl1 <- readRDS(file.path(datapath, 'models/varying1location.RDS'))
-vl2 <- readRDS(file.path(datapath, 'models/varying2location.RDS'))
+vl2 <- readRDS(file.path(datapath, 'models/varying2locationcholestky.RDS'))
 vlP <- readRDS(file.path(datapath, 'models/varyinglocationPOIS.RDS'))
 
 
@@ -31,6 +31,8 @@ fixedlist <- list(pop=otr$pop,
 multilist <- list(pop=otr$pop,
                   year=otr$year,
                   N=nrow(otr),
+                  K=2,
+                  x=matrix(c(rep(1, nrow(otr)), otr$year), ncol=2),
                   P=nlevels(locfac),
                   loc=as.integer(locfac))
 
@@ -45,31 +47,37 @@ fixedl <- stan(model_code=linear, data=fixedlist, iter=20000, warmup = 5000,
                chains=1)
 saveRDS(fixedl, file.path(datapath, 'models/fixedpost.RDS'))
 
-#Varying FX location model
 
-#identifying any pathologies in the model
+
+# Identifying Pathologies in the models -----------------------------------
+
+#varying effects on intercepts
 multi1 <- stan(model_code=vl1, data=multilist, iter=25000, warmup=5000,
                chains=1, control=list(adapt_delta = 0.99))
 
 saveRDS(multi1, file.path(datapath, 'models/varying1locationpost.RDS'))
 
+#varying effects on intercepts + slopes
+multi2 <- stan(model_code=vl2, data=multilist, iter=10000, warmup=1000,
+               chains=4, control=list(adapt_delta = 0.99))
 
-#running the model for estimating parameters etc.
+#varying effects glm with poisson distribution
+multiP <- stan(model_code=vlP, data=multilist, iter=10000, warmup=1000,
+               chains=4, control=list(adapt_delta = 0.99))
+
+
+# Run Model for parameter estimation --------------------------------------
+
+#mixed effects model
 multi2long <- stan(model_code=vl2, data=multilist, iter=25000, warmup=5000,
                   chains=1, control=list(adapt_delta = 0.99))
 saveRDS(multi2long, file.path(datapath, 'models/varying2locationpost.RDS'))
 
 
-multiPOIS <- stan(model_code=vlP, data=multilist, iter=25000, warmup=5000,
-                   chains=1, control=list(adapt_delta = 0.99))
-saveRDS(multiPOIS, file.path(datapath, 'models/varyinglocPOISpost.RDS'))
-
-
-#############
-
-#use loo to compare models
+#mixed effects glm
+multiPlong <- stan(model_code=vlP, data=multilist, iter=25000, 
+                   warmup=5000, chains=1, control=list(adapt_delta = 0.99))
+saveRDS(multiPlong, file.path(datapath, 'models/varyinglocPOISpost.RDS'))
 
 
 
-
-###########################################################################
