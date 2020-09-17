@@ -1,55 +1,70 @@
+
+# Update This -------------------------------------------------------------
+
+year <- 2019
+
+
+# Read in Data ------------------------------------------------------------
+
 datapath <- '/Users/echellwig/Google Drive/OtherPeople/otterData/'
 library(data.table)
 
-options(stringsAsFactors = FALSE)
+locs <- fread(file.path(datapath, 'clean/otterlocs.csv'))
 
-locs <- fread(file.path(datapath, 'otterlocs.csv'))
-ott <- fread(file.path(datapath, 'OtterPopulation2019.csv'), header=TRUE)
+otterfile <- file.path(datapath, 'raw', paste0('OtterPopulation', year, '.csv'))
+ott <- fread(otterfile, header=TRUE)
 
-areaNames <- c('Abbotts', "NTB", "Giacomini", 'Rodeo', "Muir",'Greenbrae',
-               'Tennessee', "Bolinas",'Drakes','Bass', 'Reservoir','Lagunitas',
-               'LasGallinas','Estero')
 
-#####################################################
 
-ott[,":="(location=areaNames, FSS=NULL)]
+# Add Location info -------------------------------------------------------
 
-ott_all <- merge(ott, locs, by='location')
+ott[,FSS:=NULL]
 
-ottm <- melt(ott_all, id.vars = c('location','region','habitat'), 
-             variable.name = 'year', value.name = 'pop', variable.factor = FALSE)
+ott_all <- merge(ott, locs[,.(siteID, location, region, habitat)], by='siteID')
 
-ottm[,":="(year=as.numeric(year))]
 
-ottmNApops <- which(is.na(ottm$pop))
+# Reshape -----------------------------------------------------------------
+
+
+ottm <- melt(ott_all, id.vars = c('siteID','location','region','habitat'), 
+             variable.name = 'year', value.name = 'pop', 
+             variable.factor = FALSE)
+
+ottm[,year:=as.numeric(year)-2012]
+
+
+# Remove Missing Data -----------------------------------------------------
+
+
 ottr <- ottm[!is.na(pop)]
 
-ottr$year <- ottr$year-2012
-
-ottr <- ottr[!location %in% c('Greenbrae', 'Bolinas')]
-
-write.csv(ottr, file.path(datapath, 'otterclean2019.csv'), row.names = FALSE)
+ottr <- ottr[!siteID %in% c(6,8)]
 
 
+# Save --------------------------------------------------------------------
 
-pup$Area <- areaNames
-names(pup)[1] <- 'location'
-pup_all <- merge(pup, locs, by='location')
-
-
-pupm <- melt(pup_all, id.vars = c('location','region','habitat'), 
-             variable.name = 'year', value.name = 'pups')
-
-pupm$year <- as.integer(sub("X", "", pupm$year))
-
-NApops <- which(is.na(pupm$pups))
-pupr <- pupm[-NApops,]
-
-pupr$year <- pupr$year - 2012
-
-otterpupper <- merge(ottr, pupr)
-
-write.csv(otterpupper, file.path(datapath, 'pupclean.csv'), row.names = FALSE)
+fwrite(ottr, file.path(datapath, 'clean/otterclean2019.csv'))
 
 
-
+# 
+# pup$Area <- areaNames
+# names(pup)[1] <- 'location'
+# pup_all <- merge(pup, locs, by='location')
+# 
+# 
+# pupm <- melt(pup_all, id.vars = c('location','region','habitat'), 
+#              variable.name = 'year', value.name = 'pups')
+# 
+# pupm$year <- as.integer(sub("X", "", pupm$year))
+# 
+# NApops <- which(is.na(pupm$pups))
+# pupr <- pupm[-NApops,]
+# 
+# pupr$year <- pupr$year - 2012
+# 
+# otterpupper <- merge(ottr, pupr)
+# 
+# write.csv(otterpupper, file.path(datapath, 'pupclean.csv'), row.names = FALSE)
+# 
+# 
+# 
