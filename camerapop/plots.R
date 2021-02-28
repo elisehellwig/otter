@@ -5,13 +5,14 @@ library(dismo)
 library(tmap)
 library(tmaptools)
 
-datapath <- '/Users/echellwig/Drive/OtherPeople/otterData/'
-pp <- read.csv(file.path(datapath, 'vis/popplot.csv'))
+datapath <- '/Users/echellwig/Google Drive/OtherPeople/otterData/'
+pp <- read.csv(file.path(datapath, 'vis/popplot.csv'), stringsAsFactors = TRUE)
 
-lvlNames <- c('Abbotts Lagoon', 'Alpine Reservoir', 'Bass Lake','Bolinas',
-              'Drakes Bay', 'El Estero', 'Giacomini Wetlands','Las Gallinas',
-              'Madera Creek', 'Muir Woods','North Tomales Bay','Peters Dam',
+lvlNames <- c('Abbotts Lagoon', 'Bass Lake', 'Drakes Bay', 'Drakes Estero',
+              'Giacomini Wetlands', 'Lagunitas Creek',
+              'Las Gallinas', 'Muir Beach','North Tomales Bay','Reservoirs',
               'Rodeo Lagoon','Tennessee Valley')
+
 levels(pp$Site) <- lvlNames
 
 charcolors <- c('#1b9e77', '#d95f02', '#7570b3')
@@ -24,12 +25,12 @@ popplot <- popplot + geom_ribbon(aes(x=Year, min=Lower95, max=Upper95),
 popplot <- popplot + geom_point(aes(x=Year, y=O_Otters), size=3)
 popplot <- popplot + facet_wrap(~Site) + theme_bw(30)
 popplot <- popplot + scale_y_continuous(breaks=seq(0, 15, by=5))
-popplot <- popplot + scale_x_continuous(breaks=seq(2013, 2021, by=2))
+popplot <- popplot + scale_x_continuous(breaks=seq(2013, 2027, by=4))
 popplot <- popplot + coord_cartesian(ylim = c(0, 15)) 
 popplot <- popplot + labs(x='Year', y='Otter Population')
 #popplot <- popplot + geom_hline(yintercept=0, color='red2', size=1.3)
 
-png(file.path(datapath, 'plots/population.png'), width=3500, height=2000, 
+png(file.path(datapath, 'plots/population2019.png'), width=3500, height=2000, 
     res=150)
 popplot
 dev.off()
